@@ -1,5 +1,3 @@
-;; ================ prime numbers ================
-
 (ns euler
   (:use [clojure.contrib.lazy-seqs :only (primes fibs)]
         [clojure.set :only (difference)]
