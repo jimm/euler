@@ -1,0 +1,3 @@
+* Project Euler Solutions
+
+This project contains my code for [[http://projecteuler.net/][Project Euler]] problem solutions.
