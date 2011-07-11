@@ -522,3 +522,33 @@ below *abundant-sum-floor* and are not in that list." []
 digits."
   []
   (count (take-while #(< (count (str %)) 1000) (fibs))))
+
+;; ================
+
+(defn recurring-digits
+  "Return a sequence containing the recurring digits in the ratio 1/n. May
+return an empty sequence. We do this by performing long division, looking for a previously seen divisor/remainder pair that indicates a cycle."
+  [n]
+  (loop [gozinta 10                     ; how many times n goes into this number
+         digits-and-remainders []]
+    (let [digit (int (/ gozinta n))
+          remainder (- gozinta (* digit n))
+          pair (list digit remainder)]
+      (cond
+       (zero? remainder)
+       []
+
+       (.contains digits-and-remainders pair)
+       (map first (drop (.indexOf digits-and-remainders pair) digits-and-remainders))
+
+       true
+       (recur (* remainder 10) (conj digits-and-remainders pair))))))
+
+(defn p26
+  "Find the value of d < 1000 for which 1/d contains the longest recurring
+cycle in its decimal fraction part."
+  []
+  (let [recurring-cycles (map recurring-digits (range 1 1000))
+        max-cycle-length (apply max (map count recurring-cycles))
+        max-cycle-length-entry (first (filter #(= max-cycle-length (count %)) recurring-cycles))]
+    (inc (.indexOf recurring-cycles max-cycle-length-entry))))
