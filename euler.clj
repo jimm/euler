@@ -736,7 +736,7 @@ center."
 ;; Find the sum of all the numbers that can be written as the sum of fifth
 ;; powers of their digits.
 
-(defn p28-max-num
+(defn p29-max-num
   "Returns an upper bound on the integers that can be expressed as the sum
 of their digits to the power p."
   [p]
@@ -744,18 +744,18 @@ of their digits to the power p."
     (int (Math/pow 10 (first (drop-while #(< (int (Math/pow  10 %)) (* % max-digit-val)) (iterate inc 1)))))))
 
 ;; Hard-coded 5th power
-(def p28-digit-powers (vec (map #(int (Math/pow % 5)) (range 0 10))))
+(def p29-digit-powers (vec (map #(int (Math/pow % 5)) (range 0 10))))
 
-;; Uses p28-digit-powers, which uses hard-coded power
+;; Uses p29-digit-powers, which uses hard-coded power
 (defn sum-of-pow-of-digits
   "The sum of the fifth powers of the digits of n."
   [n]
-  (reduce + (map #(nth p28-digit-powers (digit-to-int %)) (str n))))
+  (reduce + (map #(nth p29-digit-powers (digit-to-int %)) (str n))))
 
-(defn p28
+(defn p29
   "Return sum of all numbers > 1 that can be written as sum of fifth power
 of their digits."
   []
   (reduce +
           (filter #(= % (sum-of-pow-of-digits %))
-                  (range 2 (p28-max-num 5)))))
+                  (range 2 (p29-max-num 5)))))
