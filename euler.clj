@@ -5,16 +5,23 @@
 
 (defn prime-test [n i j h]
   (let [n (int n) i (int i) j (int j) h (int h)]
-    (cond (= i j) (== i h)
+    (cond (== i j) (== i h)
           (zero? (unchecked-remainder n i)) (recur n i i h)
           true (recur n (inc 1) j h))))
+
+(defn easy-prime?
+  [n]
+  (= (first (drop-while #(< % n) primes))))
+
+(def easy-prime? (memoize easy-prime?))
 
 (defn prime?
   "Returns true if n is prime."
   [n]
   (let [n (int n)
-        i (int (inc (int (Math/sqrt n))))]
-    (prime-test n 2 i i)))
+        i (Math/floor (Math/sqrt n))]
+    (if (= n (* i i)) false
+        (prime-test n 2 i i))))
 
 (def prime? (memoize prime?))
 
@@ -64,6 +71,12 @@
   (let [max-divisor-check (int (Math/sqrt n))
         low-divisors (filter #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate inc 1)))]
   (set (concat low-divisors (map #(unchecked-divide n %) low-divisors)))))
+
+(defn easy2-prime?
+  [n]
+  (= 2 (count (divisors n))))
+
+(def easy2-prime? (memoize easy2-prime?))
 
 (defn max-val-index
   "Return the index of the maximum value found after applying f to coll."
@@ -589,3 +602,23 @@ cycle in its decimal fraction part."
 ;; Find the product of the coefficients, a and b, for the quadratic expression
 ;; that produces the maximum number of primes for consecutive values of n,
 ;; starting with n = 0.
+
+(defn num-primes-generated
+  [[a b]]
+  (count (take-while easy2-prime? (map #(+ (* % %) (* a %) b) (iterate inc 0)))))
+
+(defn p27
+  "Find the product of the coefficients, a and b, for the quadratic
+expression that produces the maximum number of primes for consecutive values
+of n, starting with n = 0."
+  []
+  (let [ab-seq (for [a (range -999 1000) b (range -999 1000)] (list a b))]
+    (loop [ab-seq ab-seq
+           max-num-primes 0
+           max-primes-coeffs ()]
+      (if (nil? ab-seq)
+        (apply * max-primes-coeffs)
+        (let [npg (num-primes-generated (first ab-seq))]
+          (if (> npg max-num-primes)
+            (recur (next ab-seq) npg (first ab-seq))
+            (recur (next ab-seq) max-num-primes max-primes-coeffs)))))))
