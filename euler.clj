@@ -719,3 +719,43 @@ center."
                    b (range 2 101)]
                    (Math/pow a b))]
     (count (set nums))))
+
+;; ================
+
+;; Surprisingly there are only three numbers that can be written as the sum of
+;; fourth powers of their digits:
+;;
+;; 1634 = 1^4 + 6^4 + 3^4 + 4^4
+;; 8208 = 8^4 + 2^4 + 0^4 + 8^4
+;; 9474 = 9^4 + 4^4 + 7^4 + 4^4
+;;
+;; As 1 = 1^4 is not a sum it is not included.
+;;
+;; The sum of these numbers is 1634 + 8208 + 9474 = 19316.
+;;
+;; Find the sum of all the numbers that can be written as the sum of fifth
+;; powers of their digits.
+
+(defn p28-max-num
+  "Returns an upper bound on the integers that can be expressed as the sum
+of their digits to the power p."
+  [p]
+  (let [max-digit-val (int (Math/pow 9 p))]
+    (int (Math/pow 10 (first (drop-while #(< (int (Math/pow  10 %)) (* % max-digit-val)) (iterate inc 1)))))))
+
+;; Hard-coded 5th power
+(def p28-digit-powers (vec (map #(int (Math/pow % 5)) (range 0 10))))
+
+;; Uses p28-digit-powers, which uses hard-coded power
+(defn sum-of-pow-of-digits
+  "The sum of the fifth powers of the digits of n."
+  [n]
+  (reduce + (map #(nth p28-digit-powers (digit-to-int %)) (str n))))
+
+(defn p28
+  "Return sum of all numbers > 1 that can be written as sum of fifth power
+of their digits."
+  []
+  (reduce +
+          (filter #(= % (sum-of-pow-of-digits %))
+                  (range 2 (p28-max-num 5)))))
