@@ -3,17 +3,13 @@
         [clojure.set :only (difference)]
         [clojure.contrib.combinatorics :only (lex-permutations)]))
 
-(defn prime-test [n i j h]
+(defn- prime-test
+  "Helper for prime?"
+  [n i j h]
   (let [n (int n) i (int i) j (int j) h (int h)]
     (cond (== i j) (== i h)
           (zero? (unchecked-remainder n i)) (recur n i i h)
           true (recur n (inc 1) j h))))
-
-(defn easy-prime?
-  [n]
-  (= (first (drop-while #(< % n) primes))))
-
-(def easy-prime? (memoize easy-prime?))
 
 (defn prime?
   "Returns true if n is prime."
@@ -24,6 +20,15 @@
         (prime-test n 2 i i))))
 
 (def prime? (memoize prime?))
+
+(defn easy-prime?
+  "Returns non-nil if n is a prime. Looks for n in \"primes\"."
+  [n]
+  (= (first (drop-while #(< % n) primes))))
+
+(def easy-prime? (memoize easy-prime?))
+
+;;; See also easy2-prime? below
 
 (defn next-prime
   "Returns the lowest prime that is greater than n."
@@ -72,7 +77,9 @@
         low-divisors (filter #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate inc 1)))]
   (set (concat low-divisors (map #(unchecked-divide n %) low-divisors)))))
 
+;;; See also easy-prime? and prime? above
 (defn easy2-prime?
+  "Returns true if n is prime. Does this by finding divisors and counting them."
   [n]
   (= 2 (count (divisors n))))
 
@@ -622,3 +629,19 @@ of n, starting with n = 0."
           (if (> npg max-num-primes)
             (recur (next ab-seq) npg (first ab-seq))
             (recur (next ab-seq) max-num-primes max-primes-coeffs)))))))
+
+;; ================
+
+;; Starting with the number 1 and moving to the right in a clockwise
+;; direction a 5 by 5 spiral is formed as follows:
+;;
+;; 21 22 23 24 25
+;; 20  7  8  9 10
+;; 19  6  1  2 11
+;; 18  5  4  3 12
+;; 17 16 15 14 13
+;;
+;; It can be verified that the sum of the numbers on the diagonals is 101.
+;;
+;; What is the sum of the numbers on the diagonals in a 1001 by 1001 spiral
+;; formed in the same way?
