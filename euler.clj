@@ -65,6 +65,19 @@
         low-divisors (filter #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate inc 1)))]
   (set (concat low-divisors (map #(unchecked-divide n %) low-divisors)))))
 
+(defn max-val-index
+  "Return the index of the maximum value found after applying f to coll."
+  [f coll]
+  (loop [coll coll
+         i 0
+         max-index nil
+         max-val nil]
+    (if (nil? coll) max-index
+        (let [val (f (first coll))]
+          (if (or (nil? max-val) (> val max-val))
+            (recur (next coll) (inc i) i val)
+            (recur (next coll) (inc i) max-index max-val))))))
+
 ;; ================ problems ================
 
 (defn mults-of-3or5-below-1000 []
@@ -548,7 +561,31 @@ return an empty sequence. We do this by performing long division, looking for a 
   "Find the value of d < 1000 for which 1/d contains the longest recurring
 cycle in its decimal fraction part."
   []
-  (let [recurring-cycles (map recurring-digits (range 1 1000))
-        max-cycle-length (apply max (map count recurring-cycles))
-        max-cycle-length-entry (first (filter #(= max-cycle-length (count %)) recurring-cycles))]
-    (inc (.indexOf recurring-cycles max-cycle-length-entry))))
+  (let [recurring-cycles (map recurring-digits (range 1 1000))]
+    (inc (max-val-index count recurring-cycles))))
+
+;; ================
+
+;; Euler published the remarkable quadratic formula:
+
+;; n^2 + n + 41
+
+;; It turns out that the formula will produce 40 primes for the consecutive
+;; values n = 0 to 39. However, when n = 40, 40^2 + 40 + 41 = 40(40 + 1) + 41 is
+;; divisible by 41, and certainly when n = 41, 41^2 + 41 + 41 is clearly
+;; divisible by 41.
+
+;; Using computers, the incredible formula n^2 79n + 1601 was discovered,
+;; which produces 80 primes for the consecutive values n = 0 to 79. The
+;; product of the coefficients, -79 and 1601, is -126479.
+
+;; Considering quadratics of the form:
+
+;; n^2 + an + b, where |a|  1000 and |b|  1000
+
+;; where |n| is the modulus/absolute value of n
+;; e.g. |11| = 11 and |-4| = 4
+
+;; Find the product of the coefficients, a and b, for the quadratic expression
+;; that produces the maximum number of primes for consecutive values of n,
+;; starting with n = 0.
