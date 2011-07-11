@@ -641,7 +641,57 @@ of n, starting with n = 0."
 ;; 18  5  4  3 12
 ;; 17 16 15 14 13
 ;;
+;; 73 74 75 76 77 78 79 80 81
+;; 72 43 44 45 46 47 48 49 50
+;; 71 42 21 22 23 24 25 26 51
+;; 70 41 20  7  8  9 10 27 52
+;; 69 40 19  6  1  2 11 28 53
+;; 68 39 18  5  4  3 12 29 54
+;; 67 38 17 16 15 14 13 30 55
+;; 66 37 36 35 34 33 32 31 56
+;; 65 64 63 62 61 60 59 58 57
+;;
 ;; It can be verified that the sum of the numbers on the diagonals is 101.
 ;;
 ;; What is the sum of the numbers on the diagonals in a 1001 by 1001 spiral
 ;; formed in the same way?
+
+;; From the middle, each diagonal goes outward in a series
+;; - going northeast the numbers are (2+n)^2
+;; - going northwest each number +6, +14, +22, +30 (3*2, 7*2, 11*2)
+;; - going southwest each number +4, +12, +20, +28 (2x2x1, 2x2x3, 2x2x5, 2x2x7)
+;; - going southeast each number +2, +10, +18, +28 ????
+
+(defn northeast-diagonal
+  "Returns a lazy sequence of all northeast diagonal numbers, excluding the
+center."
+  []
+  (map #(* (inc %) (inc %)) (iterate #(+ 2 %) 2)))
+
+(defn northwest-diagonal
+  "Returns a lazy sequence of all northwest diagonal numbers, excluding the
+center."
+  []
+  (map #(- (* (inc %) (inc %)) %) (iterate #(+ 2 %) 2)))
+
+(defn southeast-diagonal
+  "Returns a lazy sequence of all southeast diagonal numbers, excluding the
+center."
+  []
+  (map #(- (* (inc %) (inc %)) %) (iterate #(+ 2 %) 1)))
+
+(defn southwest-diagonal
+  "Returns a lazy sequence of all southwest diagonal numbers, excluding the
+center."
+  []
+  (map #(- (* (inc %) (inc %)) (* 2 %)) (iterate #(+ 2 %) 2)))
+
+(defn p28
+  []
+  (let [max-val (* 1001 1001)]
+  (reduce +
+   (concat '(1)                         ; the yummy, chewy center
+           (take-while #(<= % max-val) (northeast-diagonal))
+           (take-while #(<= % max-val) (northwest-diagonal))
+           (take-while #(<= % max-val) (southeast-diagonal))
+           (take-while #(<= % max-val) (southwest-diagonal))))))
