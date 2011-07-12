@@ -790,3 +790,59 @@ comprehension."
                   p1 (filter #(f (+ p100 p50 p20 p10 p5 p2 %)) (map #(* % 1)   (range 201)))
                   :when (= 200 (+ p100 p50 p20 p10 p5 p2 p1))]
               1)))))
+
+;; ================
+
+;; We shall say that an n-digit number is pandigital if it makes use of all
+;; the digits 1 to n exactly once; for example, the 5-digit number, 15234,
+;; is 1 through 5 pandigital.
+;;
+;; The product 7254 is unusual, as the identity, 39 * 186 = 7254, containing
+;; multiplicand, multiplier, and product is 1 through 9 pandigital.
+;;
+;; Find the sum of all products whose multiplicand/multiplier/product
+;; identity can be written as a 1 through 9 pandigital.
+;;
+;; HINT: Some products can be obtained in more than one way so be sure to
+;; only include it once in your sum.
+
+(defn pandigital
+  [x y]
+  (= (set (str x y (* x y))) #{\1 \2 \3 \4 \5 \6 \7 \8 \9}))
+
+(defn p32
+  []
+  (reduce + (set (for [x (range 1 10000)
+                       y (range 1 (int (/ 10000 x)))
+                       :when (pandigital x y)]
+                   (* x y)))))
+
+;; ================
+
+;; The fraction 49/98 is a curious fraction, as an inexperienced mathematician
+;; in attempting to simplify it may incorrectly believe that 49/98 = 4/8, which
+;; is correct, is obtained by cancelling the 9s.
+
+;; We shall consider fractions like, 30/50 = 3/5, to be trivial examples.
+
+;; There are exactly four non-trivial examples of this type of fraction, less
+;; than one in value, and containing two digits in the numerator and
+;; denominator.
+
+;; If the product of these four fractions is given in its lowest common terms,
+;; find the value of the denominator.
+
+(defn p33
+  []
+  nil)
+
+;; ================
+
+;; 145 is a curious number, as 1! + 4! + 5! = 1 + 24 + 120 = 145.
+;;
+;; Find the sum of all numbers which are equal to the sum of the factorial of
+;; their digits.
+;;
+;; Note: as 1! = 1 and 2! = 2 are not sums they are not included.
+
+(def digit-factorials (map factorial (range 0 10)))
