@@ -145,6 +145,7 @@
   [n]
   (let [s (str n)]
     (= (seq s) (reverse s))))
+
 (defn p4
   "Find the largest palindrome made from the product of two 3-digit numbers."
   []
@@ -909,3 +910,34 @@ of their digits."
 (defn p35
   []
   (count (filter circular-prime? (primes-upto 1000000))))
+
+;; ================
+
+;; The decimal number, 585 = 1001001001 base 2 (binary), is palindromic in both
+;; bases.
+;;
+;; Find the sum of all numbers, less than one million, which are palindromic in
+;; base 10 and base 2.
+;;
+;; (Please note that the palindromic number, in either base, may not include
+;; leading zeros.)
+
+(defn as-binary-bits
+  [n]
+  (loop [n n
+         bits ()]
+    (if (zero? n)
+      bits
+      (recur (bit-shift-right n 1) (conj bits (bit-and n 1))))))
+
+(defn palindromic-in-two-bases
+  [n]
+  (and (palindrome? n)
+       (let [bits (as-binary-bits n)]
+         (= bits (reverse bits)))))
+
+(defn p36
+  []
+  "Sum of all numbers less than 1 million which are palindromic in both base 10 and base 2."
+  (reduce + (filter palindromic-in-two-bases (range 0 1000000))))
+
