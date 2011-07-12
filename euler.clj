@@ -679,7 +679,7 @@ center."
 center."
   []
   (map #(- (* (inc %) (inc %)) %) (iterate #(+ 2 %) 1)))
-
+443839
 (defn southwest-diagonal
   "Returns a lazy sequence of all southwest diagonal numbers, excluding the
 center."
@@ -736,7 +736,7 @@ center."
 ;; Find the sum of all the numbers that can be written as the sum of fifth
 ;; powers of their digits.
 
-(defn p29-max-num
+(defn p30-max-num
   "Returns an upper bound on the integers that can be expressed as the sum
 of their digits to the power p."
   [p]
@@ -744,18 +744,49 @@ of their digits to the power p."
     (int (Math/pow 10 (first (drop-while #(< (int (Math/pow  10 %)) (* % max-digit-val)) (iterate inc 1)))))))
 
 ;; Hard-coded 5th power
-(def p29-digit-powers (vec (map #(int (Math/pow % 5)) (range 0 10))))
+(def p30-digit-powers (vec (map #(int (Math/pow % 5)) (range 0 10))))
 
-;; Uses p29-digit-powers, which uses hard-coded power
+;; Uses p30-digit-powers, which uses hard-coded power
 (defn sum-of-pow-of-digits
   "The sum of the fifth powers of the digits of n."
   [n]
-  (reduce + (map #(nth p29-digit-powers (digit-to-int %)) (str n))))
+  (reduce + (map #(nth p30-digit-powers (digit-to-int %)) (str n))))
 
-(defn p29
+(defn p30
   "Return sum of all numbers > 1 that can be written as sum of fifth power
 of their digits."
   []
   (reduce +
           (filter #(= % (sum-of-pow-of-digits %))
-                  (range 2 (p29-max-num 5)))))
+                  (range 2 (p30-max-num 5)))))
+
+;; ================
+
+;; In England the currency is made up of pound, £, and pence, p, and there are
+;; eight coins in general circulation:
+;;
+;; 1p, 2p, 5p, 10p, 20p, 50p, £1 (100p) and £2 (200p).
+;;
+;; It is possible to make £2 in the following way:
+;;
+;; 1x£1 + 1x50p + 2x20p + 1x5p + 1x2p + 3x1p
+;;
+;; How many different ways can £2 be made using any number of coins?
+
+(def gbp-coins [200 100 50 20 10 5 2 1])
+
+(defn p31
+  "A naive way to count coin combinations that total 200p using list
+comprehension."
+  []
+  (let [f #(<= % 200)]
+    (inc                  ; shortcut: ignore p200 and add one to final total
+     (count (for [p100                                         (map #(* % 100) (range 3))
+                  p50 (filter #(f (+ p100 %))                  (map #(* % 50)  (range 5)))
+                  p20 (filter #(f (+ p100 p50 %))              (map #(* % 20)  (range 11)))
+                  p10 (filter #(f (+ p100 p50 p20 %))          (map #(* % 10)  (range 21)))
+                  p5 (filter #(f (+ p100 p50 p20 p10 %))       (map #(* % 5)   (range 41)))
+                  p2 (filter #(f (+ p100 p50 p20 p10 p5 %))    (map #(* % 2)   (range 101)))
+                  p1 (filter #(f (+ p100 p50 p20 p10 p5 p2 %)) (map #(* % 1)   (range 201)))
+                  :when (= 200 (+ p100 p50 p20 p10 p5 p2 p1))]
+              1)))))
