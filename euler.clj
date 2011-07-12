@@ -832,9 +832,34 @@ comprehension."
 ;; If the product of these four fractions is given in its lowest common terms,
 ;; find the value of the denominator.
 
+(defn curious-fraction
+  [numer denom]
+  (let [dn (seq (str numer))
+        dd (seq (str denom))]
+    (cond (and (= (last dn) \0)
+               (= (last dd) \0))
+          false
+
+          (= (first dn) (last dd))
+          (and (pos? (digit-to-int (first dd)))
+               (= (/ numer denom) (/ (digit-to-int (last dn)) (digit-to-int (first dd)))))
+
+          (= (last dn) (first dd))
+          (and (pos? (digit-to-int (last dd)))
+               (= (/ numer denom) (/ (digit-to-int (first dn)) (digit-to-int (last dd)))))
+
+          true
+          false)))
+
 (defn p33
   []
-  nil)
+  ; First, find the four fractions. Later we find the denom of the product.
+  (denominator (reduce *
+                       (for [numer (range 10 100)
+                             denom (range (inc numer) 100)
+                             :when (curious-fraction numer denom)]
+                         (/ numer denom)))))
+                   
 
 ;; ================
 
