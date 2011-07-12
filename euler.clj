@@ -881,3 +881,31 @@ comprehension."
 of their digits."
   []
   (reduce + (filter sum-of-factorial-of-digits? (range 3 10000000))))
+
+;; ================
+
+;; 197 is a circular prime because all rotations of the digits: 197, 971,
+;; 719, are themselves prime.
+;;
+;; There are 13 such primes below 100: 2, 3, 5, 7, 11, 13, 17, 31, 37, 71,
+;; 73, 79, and 97.
+;;
+;; How many circular primes are there below one million?
+
+(defn circular-rotations
+  "Return all circular rotations of n's digits."
+  [n]
+  (let [s (str n)
+        len (count s)]
+    (map #(Integer/parseInt (apply str (take len (drop % (cycle s)))))
+         (range 0 len))))
+
+(defn circular-prime?
+  "Is p a circular prime?"
+  [p]
+  (= (count (str p))
+     (count (take-while easy2-prime? (circular-rotations p)))))) ; start at one because we know 0'th entry is prime
+
+(defn p35
+  []
+  (count (filter circular-prime? (primes-upto 1000000))))
