@@ -858,7 +858,6 @@ comprehension."
                              denom (range (inc numer) 100)
                              :when (curious-fraction numer denom)]
                          (/ numer denom)))))
-                   
 
 ;; ================
 
@@ -870,3 +869,15 @@ comprehension."
 ;; Note: as 1! = 1 and 2! = 2 are not sums they are not included.
 
 (def digit-factorials (map factorial (range 0 10)))
+
+(defn sum-of-factorial-of-digits?
+  "Is n the sum of the factorial of its digits?"
+  [n]
+  (= n (reduce + (map #(nth digit-factorials (digit-to-int %)) (seq (str n))))))
+
+;; This is correct, but I wish I knew why 10000000 is an upper bound.
+(defn p34
+  "Find the sum of all numbers which are equal to the sum of the factorial
+of their digits."
+  []
+  (reduce + (filter sum-of-factorial-of-digits? (range 3 10000000))))
