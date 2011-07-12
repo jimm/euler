@@ -853,7 +853,6 @@ comprehension."
 
 (defn p33
   []
-  ; First, find the four fractions. Later we find the denom of the product.
   (denominator (reduce *
                        (for [numer (range 10 100)
                              denom (range (inc numer) 100)
