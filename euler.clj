@@ -16,15 +16,16 @@
   [n]
   (let [n (int n)
         i (Math/floor (Math/sqrt n))]
-    (if (= n (* i i)) false
-        (prime-test n 2 i i))))
+    (cond (= n 2) true
+          (= n (* i i)) false
+          true (prime-test n 2 i i))))
 
 (def prime? (memoize prime?))
 
 (defn easy-prime?
   "Returns non-nil if n is a prime. Looks for n in \"primes\"."
   [n]
-  (= (first (drop-while #(< % n) primes))))
+  (= n (first (drop-while #(< % n) primes))))
 
 (def easy-prime? (memoize easy-prime?))
 
@@ -905,7 +906,7 @@ of their digits."
   "Is p a circular prime?"
   [p]
   (= (count (str p))
-     (count (take-while easy2-prime? (circular-rotations p)))))) ; start at one because we know 0'th entry is prime
+     (count (take-while easy2-prime? (circular-rotations p))))) ; start at one because we know 0'th entry is prime
 
 (defn p35
   []
@@ -941,3 +942,34 @@ of their digits."
   "Sum of all numbers less than 1 million which are palindromic in both base 10 and base 2."
   (reduce + (filter palindromic-in-two-bases (range 0 1000000))))
 
+;; ================
+
+;; The number 3797 has an interesting property. Being prime itself, it is
+;; possible to continuously remove digits from left to right, and remain prime
+;; at each stage: 3797, 797, 97, and 7. Similarly we can work from right to
+;; left: 3797, 379, 37, and 3.
+;;
+;; Find the sum of the only eleven primes that are both truncatable from left
+;; to right and right to left.
+;;
+;; NOTE: 2, 3, 5, and 7 are not considered to be truncatable primes.
+
+(defn truncatables
+  "Given a number, return a sequence containing all of the truncatable forms
+including that number."
+  [n]
+  (let [s (seq (str n))
+        rs (reverse s)
+        f (fn [s] (Long/parseLong (apply str s)))]
+    (concat
+     (map f (take-while identity (iterate next s)))
+     (map #(f (reverse %)) (rest (take-while identity (iterate next rs)))))))
+
+(defn truncatable-prime?
+  "Return non-nil if all truncatables of n are prime."
+  [n]
+  (empty? (drop-while easy-prime? (truncatables n))))
+       
+(defn p37
+  []
+  (reduce + (take 11 (filter truncatable-prime? (drop 4 primes)))))
