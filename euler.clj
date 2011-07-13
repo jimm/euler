@@ -808,15 +808,23 @@ comprehension."
 ;; HINT: Some products can be obtained in more than one way so be sure to
 ;; only include it once in your sum.
 
-(defn pandigital
-  [x y]
-  (= (set (str x y (* x y))) #{\1 \2 \3 \4 \5 \6 \7 \8 \9}))
+;; Returns true if the string s consists of one of each of the digits 1-9.
+(defmulti pandigital? class)
+
+(defmethod pandigital? String [s]
+  (= (sort s) '(\1 \2 \3 \4 \5 \6 \7 \8 \9)))
+
+(defmethod pandigital? Number [n]
+  (pandigital? (str n)))
+
+(defmethod pandigital? clojure.lang.Sequential [coll]
+  (pandigital? (apply str coll)))
 
 (defn p32
   []
   (reduce + (set (for [x (range 1 10000)
                        y (range 1 (int (/ 10000 x)))
-                       :when (pandigital x y)]
+                       :when (pandigital? (str x y (* x y)))]
                    (* x y)))))
 
 ;; ================
@@ -973,3 +981,35 @@ including that number."
 (defn p37
   []
   (reduce + (take 11 (filter truncatable-prime? (drop 4 primes)))))
+
+;; ================
+
+;; Take the number 192 and multiply it by each of 1, 2, and 3:
+;;
+;; 192 * 1 = 192
+;; 192 * 2 = 384
+;; 192 * 3 = 576
+;;
+;; By concatenating each product we get the 1 to 9 pandigital, 192384576. We
+;; will call 192384576 the concatenated product of 192 and (1,2,3)
+;;
+;; The same can be achieved by starting with 9 and multiplying by 1, 2, 3, 4,
+;; and 5, giving the pandigital, 918273645, which is the concatenated product
+;; of 9 and (1,2,3,4,5).
+;;
+;; What is the largest 1 to 9 pandigital 9-digit number that can be formed as
+;; the concatenated product of an integer with (1,2, ... , n) where n > 1?
+
+(defn concat-prods
+  [i n]
+  (map #(* i %) (range 1 (inc n))))
+
+(defn p38
+  []
+  (apply max
+        (for [n (range 2 10)
+              ; max num digits determined by num of products we are using
+              i (range 1 (Math/pow 10 (inc (int (/ 10 n)))))
+              :let [cp (concat-prods i n)]
+              :when (pandigital? cp)]
+          (Integer/parseInt (apply str cp)))))
