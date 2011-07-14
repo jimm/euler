@@ -1,3 +1,4 @@
 * Project Euler Solutions
 
-This project contains my code for [[http://projecteuler.net/][Project Euler]] problem solutions.
+This project contains my code for [[http://projecteuler.net/][Project Euler]] problem solutions. I started
+off using [[http://www.erlang.org/][Erlang]], but have switched to [[http://clojure.org/][Clojure]].
