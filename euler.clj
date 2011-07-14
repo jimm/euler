@@ -1013,3 +1013,89 @@ including that number."
               :let [cp (concat-prods i n)]
               :when (pandigital? cp)]
           (Integer/parseInt (apply str cp)))))
+
+;; ================
+
+;; If p is the perimeter of a right angle triangle with integral length sides,
+;; {a,b,c}, there are exactly three solutions for p = 120.
+;;
+;; {20,48,52}, {24,45,51}, {30,40,50}
+;;
+;; For which value of p <= 1000, is the number of solutions maximised?
+
+(defn p39
+  []
+  (let [perims (for [p (range 3 1001)
+                     a (range 1 p)
+                     b (range a p)
+                     :let [c (- p (+ a b))]
+                     :when (= (* c c) (+ (* a a) (* b b)))]
+                 p)
+        freqs (frequencies perims)]
+    ; Find key that has max val. There has to be a built-in function that
+    ; does this.
+    (loop [max-key 0, max-val 0, freqs freqs]
+      (cond (nil? freqs) max-key
+            (> (val (first freqs)) max-val) (recur (key (first freqs)) (val (first freqs)) (next freqs))
+            true (recur max-key max-val (next freqs))))))
+
+;; ================
+
+;; An irrational decimal fraction is created by concatenating the positive integers:
+;;
+;;   0.123456789101112131415161718192021...
+;;                ^ (12th digit)
+;;
+;; It can be seen that the 12th digit of the fractional part is 1.
+;;
+;; If d(sub n) represents the nth digit of the fractional part, find the
+;; value of the following expression:
+;;
+;; d(sub 1) x d(sub 10) x d(sub 100) x d(sub 1,000) x d(sub 10,000) x
+;;   d(sub 100,000) x d(sub 1,000,000)
+
+;; Let's brute-force this one
+(defn p40
+  []
+  (let [v (vec (apply str (range 0 1000000)))
+        len (count v)]
+    (reduce * (map #(digit-to-int (nth v %)) [1 10 100 1000 10000 100000 1000000]))))
+
+;; ================
+
+;; What is the largest n-digit pandigital prime that exists?
+
+;; This code assumes there is a 9-digit pandigital prime. If not, this will
+;; return nil.
+(defn p41
+  []
+  (let [digits (reverse (range 1 10))
+        pandigitals (for [d9 digits
+                          :let [i9 (* d9 100000000)
+                                d8-digits (remove #(= d9 %) digits)]
+                          d8 d8-digits
+                          :let [i8 (* d8 10000000)
+                                d7-digits (remove #(= d8 %) d8-digits)]
+                          d7 d7-digits
+                          :let [i7 (* d7 1000000)
+                                d6-digits (remove #(= d7 %) d7-digits)]
+                          d6 d6-digits
+                          :let [i6 (* d6 100000)
+                                d5-digits (remove #(= d6 %) d6-digits)]
+                          d5 d5-digits
+                          :let [i5 (* d5 10000)
+                                d4-digits (remove #(= d5 %) d5-digits)]
+                          d4 d4-digits
+                          :let [i4 (* d4 1000)
+                                d3-digits (remove #(= d4 %) d4-digits)]
+                          d3 d3-digits
+                          :let [i3 (* d3 100)
+                                d2-digits (remove #(= d3 %) d3-digits)]
+                          d2 d2-digits
+                          :let [i2 (* d2 10)
+                                d1-digits (remove #(= d2 %) d2-digits)]
+                          d1 (remove even? d1-digits)
+                          :let [num (+ i9 i8 i7 i6 i5 i4 i3 i2 d1)]
+                          :when (easy2-prime? num)]
+                      num)]
+    (first pandigitals)))
