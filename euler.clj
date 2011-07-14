@@ -1067,17 +1067,22 @@ including that number."
 
 ;; This code assumes there is a 9-digit pandigital prime. If not, this will
 ;; return nil.
+
+;; NOTE: This ran way too slowly with all 9 digits 1-9, so I backed off to 7
+;; (range 1 8), got the answer REALLY quickly, checked the answer, and it
+;; was right.
 (defn p41
   []
-  (let [digits (reverse (range 1 10))
-        pandigitals (for [d9 digits
-                          :let [i9 (* d9 100000000)
-                                d8-digits (remove #(= d9 %) digits)]
-                          d8 d8-digits
-                          :let [i8 (* d8 10000000)
-                                d7-digits (remove #(= d8 %) d8-digits)]
-                          d7 d7-digits
+  (let [digits (reverse (range 1 8))
+        pandigitals (for [; d9 digits
+                          ; :let [i9 (* d9 100000000)
+                          ;       d8-digits (remove #(= d9 %) digits)]
+                          ; d8 d8-digits
+                          ; :let [i8 (* d8 10000000)
+                          ;       d7-digits (remove #(= d8 %) d8-digits)]
+                          d7 digits ; d7-digits
                           :let [i7 (* d7 1000000)
+                                d7-digits digits ; when range 1-8 only
                                 d6-digits (remove #(= d7 %) d7-digits)]
                           d6 d6-digits
                           :let [i6 (* d6 100000)
@@ -1094,8 +1099,10 @@ including that number."
                           d2 d2-digits
                           :let [i2 (* d2 10)
                                 d1-digits (remove #(= d2 %) d2-digits)]
-                          d1 (remove even? d1-digits)
-                          :let [num (+ i9 i8 i7 i6 i5 i4 i3 i2 d1)]
+                          d1 d1-digits
+                          :when (odd? d1)
+                          ; :let [num (+ i9 i8 i7 i6 i5 i4 i3 i2 d1)]
+                          :let [num (+ i7 i6 i5 i4 i3 i2 d1)]
                           :when (easy2-prime? num)]
                       num)]
     (first pandigitals)))
