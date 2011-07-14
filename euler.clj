@@ -1124,11 +1124,11 @@ including that number."
 
 (defn triangle?
   [n]
-  (= n (take 1 (drop-while #(< n %) triangle-numbers))))
+  (= n (first (drop-while #(< % n) triangle-numbers))))
 
-(def triangle? (memoize triangle?))
+(def triangleo? (memoize triangle?))
 
-(defn p22
+(defn p42
   []
   (let [txt (slurp "words_p42.txt")
         words (sort (.split (.substring txt 1 (dec (count txt))) "\",\""))
