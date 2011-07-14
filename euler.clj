@@ -1106,3 +1106,50 @@ including that number."
                           :when (easy2-prime? num)]
                       num)]
     (first pandigitals)))
+
+;; ================
+
+;; The nth term of the sequence of triangle numbers is given by, tn =
+;; 1/2n(n+1); so the first ten triangle numbers are:
+;;
+;; 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, ...
+;;
+;; By converting each letter in a word to a number corresponding to its
+;; alphabetical position and adding these values we form a word value. For
+;; example, the word value for SKY is 19 + 11 + 25 = 55 = t(sub 10). If the
+;; word value is a triangle number then we shall call the word a triangle word.
+;;
+;; Using words_p42.txt, a 16K text file containing nearly two-thousand common
+;; English words, how many are triangle words?
+
+(defn triangle?
+  [n]
+  (= n (take 1 (drop-while #(< n %) triangle-numbers))))
+
+(def triangle? (memoize triangle?))
+
+(defn p22
+  []
+  (let [txt (slurp "words_p42.txt")
+        words (sort (.split (.substring txt 1 (dec (count txt))) "\",\""))
+        alpha-vals (map alpha-value words)]
+    (count (filter #(triangle? %) alpha-vals))))
+
+;; ================
+
+;; The number 1406357289 is a 0 to 9 pandigital number because it is made up of
+;; each of the digits 0 to 9 in some order, but it also has a rather
+;; interesting sub-string divisibility property.
+;;
+;; Let d1 be the 1st digit, d2 be the 2nd digit, and so on. In this way, we
+;; note the following (where d's are concatenated):
+;;
+;; d2 d3 d4  = 406 is divisible by 2
+;; d3 d4 d5  = 063 is divisible by 3
+;; d4 d5 d6  = 635 is divisible by 5
+;; d5 d6 d7  = 357 is divisible by 7
+;; d6 d7 d8  = 572 is divisible by 11
+;; d7 d8 d9  = 728 is divisible by 13
+;; d8 d9 d10 = 289 is divisible by 17
+;;
+;; Find the sum of all 0 to 9 pandigital numbers with this property.
