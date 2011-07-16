@@ -55,6 +55,11 @@
 
 ;; ================ utils ================
 
+(defn evenly-divisible-by?
+  "Return true if n is evenly divisible by d."
+  [n d]
+  (zero? (unchecked-remainder n d)))
+
 (defn digit-to-int
   "Converts a Character that is a digit to an int."
   [c]
@@ -431,7 +436,6 @@ century (1 Jan 1901 to 31 Dec 2000)?"
     ; equals the other number. These are amicable pairs. We return those two
     ; numbers in the list comprehension, then sum the unique set of those
     ; numbers using reduce.
-    (println (take 20 n-and-dn-list)) ; DEBUG
     (reduce +
             (set
              (flatten
@@ -820,6 +824,18 @@ comprehension."
 (defmethod pandigital? clojure.lang.Sequential [coll]
   (pandigital? (apply str coll)))
 
+;; Returns true if the string s consists of one of each of the digits 1-9.
+(defmulti pandigital-0? class)
+
+(defmethod pandigital-0? String [s]
+  (= (sort s) '(\0 \1 \2 \3 \4 \5 \6 \7 \8 \9)))
+
+(defmethod pandigital-0? Number [n]
+  (pandigital? (str n)))
+
+(defmethod pandigital-0? clojure.lang.Sequential [coll]
+  (pandigital? (apply str coll)))
+
 (defn p32
   []
   (reduce + (set (for [x (range 1 10000)
@@ -1123,7 +1139,7 @@ including that number."
   [n]
   (= n (first (drop-while #(< % n) triangle-numbers))))
 
-(def triangleo? (memoize triangle?))
+(def triangle? (memoize triangle?))
 
 (defn p42
   []
@@ -1150,3 +1166,68 @@ including that number."
 ;; d8 d9 d10 = 289 is divisible by 17
 ;;
 ;; Find the sum of all 0 to 9 pandigital numbers with this property.
+
+;; divisors of all numbers to 999.
+(def divisors-to-999 (vec (map divisors (range 0 1000))))
+
+;; Can skip check for 2, because there's always a 3-digit # ending in an
+;; even number. Can check for divisible by 5 by ensuring that either "05" or
+;; "50" are not first two digits (because if they aren't then some
+;; three-digit number ends with 5 or 0).
+;; (defn p43-str-prime?
+;;   [s]
+;;   (let [str-by-threes (map #(.substring s % (+ % 3)) (range 0 8))
+;;         int-by-threes (map #(Integer/parseInt %) str-by-threes)]
+;;     (and
+;;      (even? (nth int-by-threes 1))
+;;      (some #{3} (divisors (nth int-by-threes 2)))
+;;      (some #{5} (divisors (nth int-by-threes 3)))
+;;      (some #{7} (divisors (nth int-by-threes 4)))
+;;      (some #{11} (divisors (nth int-by-threes 5)))
+;;      (some #{13} (divisors (nth int-by-threes 6)))
+;;      (some #{17} (divisors (nth int-by-threes 7))))))
+
+(defn p43
+  []
+    (let [digits (reverse (range 0 10)) ; 0 - 9 pandigital
+          mults-of-17 (filter #(evenly-divisible-by? % 17) (range 1 1000))
+          pandigitals (for [d2-d0 mults-of-17
+                            :let [d2-d0-str (format "%03d" d2-d0)]
+                            :when (or (< d2-d0 100)
+                                      (= 3 (count (set d2-d0-str))))
+
+                            :let [d3-digits (remove #(some (set d2-d0-str) (str %)) (range 0 10))]
+                            d3 d3-digits
+                            :when (evenly-divisible-by? (+ (* 100 d3) (int (/ d2-d0 10))) 13)
+
+                            :let [d4-digits (remove #(= d3 %) d3-digits)]
+                            d4 d4-digits
+                            :when (evenly-divisible-by? (+ (* 100 d4) (* 10 d3) (int (/ d2-d0 100))) 11)
+
+                            :let [d5-digits (remove #(= d4 %) d4-digits)]
+                            d5 d5-digits
+                            :when (evenly-divisible-by? (+ (* 100 d5) (* 10 d4) d3) 7)
+
+                            :let [d6-digits (remove #(= d5 %) d5-digits)]
+                            d6 d6-digits
+                            :when (evenly-divisible-by? (+ (* 100 d6) (* 10 d5) d4) 5)
+
+                            :let [d7-digits (remove #(= d6 %) d6-digits)]
+                            d7 d7-digits
+                            :when (evenly-divisible-by? (+ (* 100 d7) (* 10 d6) d5) 3)
+
+                            :let [d8-digits (remove #(= d7 %) d7-digits)]
+                            d8 d8-digits
+                            :when (even? (+ (* 100 d8) (* 10 d7) d6))
+
+                            :let [d9-digits (remove #(= d8 %) d8-digits)]
+                            d9 d9-digits]
+                        (+ (* d9 1000000000)
+                           (* d8 100000000)
+                           (* d7 10000000)
+                           (* d6 1000000)
+                           (* d5 100000)
+                           (* d4 10000)
+                           (* d3 1000)
+                           d2-d0))]
+      (reduce + pandigitals)))
