@@ -1309,3 +1309,34 @@ including that number."
                              it t))
      (< p h) (recur ih h (inc ip) (nth-pentagonal ip) it t)
      (> p h) (recur (inc ih) (nth-hexagonal ih) ip p it t))))
+
+;; ================
+
+;; It was proposed by Christian Goldbach that every odd composite number can
+;; be written as the sum of a prime and twice a square.
+;;
+;; 9 = 7 + 2(1^2)
+;; 15 = 7 + 2(2^2)
+;; 21 = 3 + 2(3^2)
+;; 25 = 7 + 2(3^2)
+;; 27 = 19 + 2(2^2)
+;; 33 = 31 + 2(1^2)
+;;
+;; It turns out that the conjecture was false.
+;;
+;; What is the smallest odd composite that cannot be written as the sum of a
+;; prime and twice a square?
+
+(defn goldbachian?
+  "If n satisfies the Goldbach Conjecture then return n, else return nil. We
+return n so that the caller can use it as the return value of a call to
+'some'."
+  [n]
+  (first (for [prime (drop 1 (primes-upto n)) ; we can skip 2 since 2 + even = even
+               i (range 0 (inc (inc (Math/sqrt (/ n 2)))))
+               :when (= n (+ prime (* 2 i i)))]
+           n)))
+
+(defn p46
+  []
+  (first (drop-while goldbachian? (iterate #(+ 2 %) 35))))
