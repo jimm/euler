@@ -1434,3 +1434,15 @@ elements."
      (remove #(= "148748178147" %)
              (map #(apply str (set (flatten %)))
                   (remove empty? (map p49-sequences (remove #(< (count %) 3) (vals digits-to-primes)))))))))
+
+;; ================
+
+;; The prime 41 can be written as the sum of six consecutive primes:
+;;
+;; 41 = 2 + 3 + 5 + 7 + 11 + 13
+;;
+;; This is the longest sum of consecutive primes that adds to a prime below
+;; one hundred.
+;;
+;; Which prime below one million can be written as the sum of the most
+;; consecutive primes?
