@@ -1,7 +1,8 @@
 (ns euler
   (:use [clojure.contrib.lazy-seqs :only (primes fibs)]
         [clojure.set :only (difference)]
-        [clojure.contrib.combinatorics :only (lex-permutations)]))
+        [clojure.contrib.combinatorics :only (lex-permutations)]
+        [clojure.contrib.math :only (expt)]))
 
 (defn- prime-test
   "Helper for prime?"
@@ -1367,3 +1368,16 @@ return n so that the caller can use it as the return value of a call to
     (cond (not= 4 (count (prime-factors-of (+ group-start checking-nth)))) (recur (+ group-start (inc checking-nth)) 3)
           (zero? checking-nth) group-start
           true (recur group-start (dec checking-nth)))))
+
+;; ================
+
+;; The series 1^1 + 2^2 + 3^3 + ... + 10^10 = 10405071317.
+;;
+;; Find the last ten digits of the series
+;; 1^1 + 2^2 + 3^3 + ... + 1000^1000.
+
+(defn p48
+  []
+  (let [i (reduce + (map #(expt % %) (range 1 1001)))
+        s (str i)]
+    (.substring s (- (count s) 10))))
