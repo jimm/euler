@@ -573,7 +573,8 @@ digits."
 
 (defn recurring-digits
   "Return a sequence containing the recurring digits in the ratio 1/n. May
-return an empty sequence. We do this by performing long division, looking for a previously seen divisor/remainder pair that indicates a cycle."
+return an empty sequence. We do this by performing long division, looking
+for a previously seen divisor/remainder pair that indicates a cycle."
   [n]
   (loop [gozinta 10                     ; how many times n goes into this number
          digits-and-remainders []]
