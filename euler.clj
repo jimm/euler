@@ -1,8 +1,8 @@
 (ns euler
   (:use [clojure.contrib.lazy-seqs :only (primes fibs)]
         [clojure.set :only (difference)]
-        [clojure.contrib.combinatorics :only (lex-permutations)]
-        [clojure.contrib.math :only (expt)]))
+        [clojure.contrib.combinatorics :only (lex-permutations combinations)]
+        [clojure.contrib.math :only (expt abs)]))
 
 (defn- prime-test
   "Helper for prime?"
@@ -1381,3 +1381,55 @@ return n so that the caller can use it as the return value of a call to
   (let [i (reduce + (map #(expt % %) (range 1 1001)))
         s (str i)]
     (.substring s (- (count s) 10))))
+
+;; ================
+
+;; The arithmetic sequence 1487, 4817, 8147, in which each of the terms
+;; increases by 3330, is unusual in two ways: (i) each of the three terms
+;; are prime, and (ii) each of the 4-digit numbers are permutations of one
+;; another.
+;;
+;; There are no arithmetic sequences made up of three 1-, 2-, or 3-digit
+;; primes exhibiting this property, but there is one other 4-digit
+;; increasing sequence.
+;;
+;; What 12-digit number do you form by concatenating the three terms in this
+;; sequence?
+
+(defn p49-sequences
+  "Given a vector of primes, return the sequences that have three or more
+elements."
+  [primes]
+  (let [; Create a map whose keys are differences between primes and values
+        ; are all the pairs of primes that have that difference.
+        diffs-to-pairs (loop [d2p {}
+                              ps (for [p1 primes
+                                       p2 primes
+                                       :when (> p2 p1)]
+                                   (list p1 p2))]
+                              ;; ps (combinations primes 2)]
+                         (if ps (let [key (abs (- (first (first ps)) (second (first ps))))]
+                                  (recur (assoc d2p key (conj (into [] (get d2p key))
+                                                              (first ps)))
+                                         (next ps)))
+                             d2p))
+        ; Find only those values where there is more than one pair with the
+        ; same diffs.
+        d2p (filter #(= (count (val %)) 2) diffs-to-pairs)]
+    ; find all those where the pattern is [(X Y) (Y Z)]
+    (filter #(= (second (first %)) (first (second %))) (vals d2p))))
+
+(defn p49
+  []
+  (let [fd-primes (drop-while #(< % 1000) (primes-upto 9999))
+        ; Create a map whose keys are sorted digit characters and values are
+        ; all primes with those digits.
+        digits-to-primes (loop [d2p {}
+                                ps fd-primes]
+                           (if ps (let [key (sort (seq (str (first ps))))]
+                                    (recur (assoc d2p key (conj (into [] (get d2p key)) (first ps))) (next ps)))
+                               d2p))]
+    (first
+     (remove #(= "148748178147" %)
+             (map #(apply str (set (flatten %)))
+                  (remove empty? (map p49-sequences (remove #(< (count %) 3) (vals digits-to-primes)))))))))
