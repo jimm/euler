@@ -13,7 +13,7 @@
           true (recur n (inc 1) j h))))
 
 (defn prime?
-  "Returns true if n is prime."
+  "Returns true if n is prime. See also easy-prime? and easy2-prime?."
   [n]
   (let [n (int n)
         i (Math/floor (Math/sqrt n))]
