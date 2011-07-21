@@ -49,9 +49,11 @@
 (defn prime-factors-of
   "A seq containing the prime factors of n. The prime factor of a prime number
   is itself."
-  [n]
-  (filter #(zero? (rem n %))            ; #(zero? (unchecked-remainder n %))
-          (primes-upto n)))
+  ([n] (prime-factors-of n false))
+  ([n unchecked]
+     (let [f (if unchecked unchecked-remainder rem)]
+       (filter #(zero? (f n %))
+               (primes-upto n)))))
 
 ;; ================ utils ================
 
@@ -1340,3 +1342,28 @@ return n so that the caller can use it as the return value of a call to
 (defn p46
   []
   (first (drop-while goldbachian? (iterate #(+ 2 %) 35))))
+
+;; ================
+
+;; The first two consecutive numbers to have two distinct prime factors are:
+;;
+;; 14 = 2 x 7
+;; 15 = 3 x 5
+;;
+;; The first three consecutive numbers to have three distinct prime factors
+;; are:
+;;
+;; 644 = 2^2 x 7 x 23
+;; 645 = 3 x 5 x 43
+;; 646 = 2 x 17 x 19.
+;;
+;; Find the first four consecutive integers to have four distinct primes
+;; factors. What is the first of these numbers?
+
+(defn p47
+  []
+  (loop [group-start 647
+         checking-nth 3]
+    (cond (not= 4 (count (prime-factors-of (+ group-start checking-nth)))) (recur (+ group-start (inc checking-nth)) 3)
+          (zero? checking-nth) group-start
+          true (recur group-start (dec checking-nth)))))
