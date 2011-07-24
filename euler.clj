@@ -1446,3 +1446,31 @@ elements."
 ;;
 ;; Which prime below one million can be written as the sum of the most
 ;; consecutive primes?
+
+(defn make-p50-sums
+  [psl]
+  (loop [ps (next psl)
+         sums [(first psl)]]
+    (if (nil? ps) sums
+        (recur (next ps) (conj sums (+ (last sums) (first ps)))))))
+
+;; This is inefficent, but correct.
+(defn p50
+  []
+  (let [max-prime 1000000
+        ps (vec (primes-upto max-prime))
+        sums (make-p50-sums ps)
+        answer (ref {:i 0 :j 5 :len 6 :prime 41 :nums []})]
+    (loop [ijs (for [i (range 0 (count sums))
+                     j (range (inc i) (count sums))]
+                 {:i i :j j})]
+      (if (nil? ijs) @answer
+          (let [i (:i (first ijs))
+                j (:j (first ijs))
+                len (inc (- j i))]
+            (if (> len (:len @answer))
+              (let [sum (if (zero? i) (nth sums j) (- (nth sums j) (nth sums i)))]
+                (if (and (<= sum max-prime) (some #{sum} ps))
+                  (dosync (ref-set answer {:i i :j j :len len :prime sum :nums (take len (drop i sums))})))))
+            (recur (next ijs)))))
+    @answer))
