@@ -2,7 +2,8 @@
   (:use [clojure.contrib.lazy-seqs :only (primes fibs)]
         [clojure.set :only (difference)]
         [clojure.contrib.combinatorics :only (lex-permutations combinations)]
-        [clojure.contrib.math :only (expt abs)]))
+        [clojure.contrib.math :only (expt abs)]
+        [clojure.contrib.greatest-least :only (greatest-by)]))
 
 (defn- prime-test
   "Helper for prime?"
@@ -15,18 +16,21 @@
 (defn prime?
   "Returns true if n is prime. See also easy-prime? and easy2-prime?."
   [n]
-  (let [n (int n)
-        i (Math/floor (Math/sqrt n))]
-    (cond (= n 2) true
-          (= n (* i i)) false
-          true (prime-test n 2 i i))))
+  (cond (= n 2) true
+        (even? n) false
+        true (let [n (int n)
+                   i (Math/floor (Math/sqrt n))]
+               (cond (= n (* i i)) false
+                     true (prime-test n 2 i i)))))
 
 (def prime? (memoize prime?))
 
 (defn easy-prime?
   "Returns non-nil if n is a prime. Looks for n in \"primes\"."
   [n]
-  (= n (first (drop-while #(< % n) primes))))
+  (cond (= n 2) true
+        (even? n) false
+        true (= n (first (drop-while #(< % n) primes)))))
 
 (def easy-prime? (memoize easy-prime?))
 
@@ -90,7 +94,9 @@
 (defn easy2-prime?
   "Returns true if n is prime. Does this by finding divisors and counting them."
   [n]
-  (= 2 (count (divisors n))))
+  (cond (= n 2) true
+        (even? n) false
+        true (= 2 (count (divisors n)))))
 
 (def easy2-prime? (memoize easy2-prime?))
 
@@ -1474,3 +1480,126 @@ elements."
                   (dosync (ref-set answer {:i i :j j :len len :prime sum :nums (take len (drop i sums))})))))
             (recur (next ijs)))))
     @answer))
+
+;; ================
+
+;; By replacing the 1st digit of *3, it turns out that six of the nine possible
+;; values: 13, 23, 43, 53, 73, and 83, are all prime.
+;;
+;; By replacing the 3rd and 4th digits of 56**3 with the same digit, this
+;; 5-digit number is the first example having seven primes among the ten
+;; generated numbers, yielding the family: 56003, 56113, 56333, 56443, 56663,
+;; 56773, and 56993. Consequently 56003, being the first member of this family,
+;; is the smallest prime with this property.
+;;
+;; Find the smallest prime which, by replacing part of the number (not
+;; necessarily adjacent digits) with the same digit, is part of an eight prime
+;; value family.
+
+(defn primes-with-n-digits
+  "Return all primes with the same number of digits base 10, along with the
+rest of the prime sequence (so we don't have to start at the beginning again
+the next time this method is called)."
+  [ps n-digits]
+  (let [logval (dec n-digits)]
+    (take-while #(= (int (Math/log10 %)) logval) (drop-while #(< (int (Math/log10 %)) logval) ps))))
+
+;; TODO generalize p51-regexes-2 and p51-regexes-2 into one function.
+
+(defn p51-regexes-2
+  "Generates list of pairs of (A) all regex strings (not regexes) for
+n-digit numbers where 2 digits are the same and (B) a \"mask\" that helps
+return other digits in the number."
+  [n-digits]
+  (for [i (range 0 n-digits)
+        j (range (inc i) n-digits)
+        :let [num-leading-digits i
+              num-middle-digits (- j i 1)
+              num-trailing-digits (- n-digits j 1)
+              match-n #(cond (= 1 %) "\\d"
+                             (pos? %) (str "\\d{" % "}+"))]]
+    (list
+     (str (match-n num-leading-digits)   ; leading digits
+          "(\\d)"                        ; first match
+          (match-n num-middle-digits)    ; middle digits
+          "\\1"                          ; second match
+          (match-n num-trailing-digits)) ; trailing digits
+     (apply str (flatten (conj []
+                               (take num-leading-digits (repeat \.))
+                               \X
+                               (take num-middle-digits (repeat \.))
+                               \X
+                               (take num-trailing-digits (repeat \.))))))))
+
+(defn p51-regexes-3
+  "Generates list of pairs of (A) all regex strings (not regexes) for
+n-digit numbers where 3 digits are the same and (B) a \"mask\" that helps
+return other digits in the number."
+  [n-digits]
+  (for [i (range 0 n-digits)
+        j (range (inc i) n-digits)
+        k (range (inc j) n-digits)
+        :let [num-leading-digits i
+              num-middle-1-digits (- j i 1)
+              num-middle-2-digits (- k j 1)
+              num-trailing-digits (- n-digits k 1)
+              match-n #(cond (= 1 %) "\\d"
+                             (pos? %) (str "\\d{" % "}+"))]]
+    (list
+     (str (match-n num-leading-digits)   ; leading digits
+          "(\\d)"                        ; first match
+          (match-n num-middle-1-digits)  ; first middle digits
+          "\\1"                          ; second match
+          (match-n num-middle-2-digits)  ; digits middle digits
+          "\\1"                          ; third match
+         (match-n num-trailing-digits))  ; trailing digits
+     (apply str (flatten (conj []
+                               (take num-leading-digits (repeat \.))
+                               \X
+                               (take num-middle-1-digits (repeat \.))
+                               \X
+                               (take num-middle-2-digits (repeat \.))
+                               \X
+                               (take num-trailing-digits (repeat \.))))))))
+
+(defn p51-masked
+  "Given a mask like ...XX.. and a string, return a character sequence
+with the characters at the 'X' places replaced by 'X'."
+  [mask s]
+  (map #(if (= \X %1) \X %2)
+       mask s))
+
+(defn p51-find
+  "Given a number of digits and a regex-generating func (actually, it
+generates regex/mask pairs), return the longest sequence of primes that
+satisfies this problem's criteria."
+  [n-digits regex-func]
+  (let [ps (primes-with-n-digits primes n-digits)
+        sps (map str ps)
+        regex-mask-pairs (regex-func n-digits)
+        pm-map (ref {})]
+    ; Group numbers into those that match each regex. Key of pm-map is a
+    ; single pair (regex, mask) and value is the list of number strings that
+    ; matches the regex.
+    (doseq [rm regex-mask-pairs
+            s sps
+            :when (.matches s (first rm))]
+      (dosync (ref-set pm-map (assoc @pm-map rm (conj (or (get @pm-map rm) ()) s)))))
+    ; Now for each (regex, mask) pair further split up the matching values
+    ; into those that match the same mask (for example, 1224 and 1334 both
+    ; match the mask ".XX.").
+    (let [mask-map (ref {})]
+      (doseq [key (keys @pm-map)
+              s (get @pm-map key)
+              :let [mask (second key)
+                    mask-key (p51-masked mask s)]]
+        (dosync (ref-set mask-map (assoc @mask-map mask-key (conj (or (get @mask-map mask-key) ()) s)))))
+      (map #(Integer/parseInt %) (apply greatest-by #(count %) (vals @mask-map))))))
+
+(defn p51
+  []
+  (apply min (flatten (for [n-digits (range 4 7)
+                            regex-func (list p51-regexes-2 p51-regexes-3)
+                            :let [longest (p51-find n-digits regex-func)]
+                            :when (= (count longest) 8)]
+                        longest))))
