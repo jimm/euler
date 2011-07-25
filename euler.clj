@@ -1604,3 +1604,24 @@ satisfies this problem's criteria."
                             :let [longest (p51-find n-digits regex-func)]
                             :when (= (count longest) 8)]
                         longest))))
+
+;; ================
+
+;; It can be seen that the number, 125874, and its double, 251748, contain
+;; exactly the same digits, but in a different order.
+;;
+;; Find the smallest positive integer, x, such that 2x, 3x, 4x, 5x, and 6x,
+;; contain the same digits.
+
+(defn p52-num
+  [n]
+  (let [digits (set (str n))]
+    (and (= digits (set (str (* 2 n))))
+         (= digits (set (str (* 3 n))))
+         (= digits (set (str (* 4 n))))
+         (= digits (set (str (* 5 n))))
+         (= digits (set (str (* 6 n)))))))
+
+(defn p52
+ []
+ (first (take 1 (drop-while (complement p52-num) (iterate inc 1))))
