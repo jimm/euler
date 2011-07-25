@@ -81,8 +81,7 @@ b=2..."
 (defn factorial
   [n]
   (loop [cnt n acc 1]
-    (if (zero? cnt)
-      acc
+    (if (or (zero? cnt) (= 1 cnt)) acc
       (recur (dec cnt) (* acc cnt)))))
 
 (defn divisors
@@ -1645,15 +1644,28 @@ satisfies this problem's criteria."
 ;; How many, not necessarily distinct, values of nCr, for 1 <= n <= 100, are
 ;; greater than one-million?
 
+;; We can rewrite this formula as
+;;  (n(n-1)(n-2)..(n-k+1)) / k!
+
+(def factorials-to-100
+  (loop [fs [1 1]
+         i 2]
+    (if (< i 101) (recur (conj fs (* i (last fs))) (inc i))
+      fs)))
+
 (defn num-combinations
   "Returns the number of conbinations of n things picked r at a time."
   [n r]
-  (/ (factorial n) (* (factorial r) (factorial (- n r)))))
+  (/ (nth factorials-to-100 n)
+     (* (nth factorials-to-100 r) (nth factorials-to-100 (- n r))))))
 
 (defn p53
   "Naive solution. Need to simplify the num-combinations forumula."
   []
-  (count (for [n (range 1 1001)
-               r (range 1 n)            ; too many (for example, nCn is always 1)
-               :when (> (num-combinations n r) 1000000)]
-           1)))
+  (reduce + (for [n (range 1 101)
+                  r (range 1 n)         ; wasteful
+                  ;; ; Since nCr == nC(n-r) we can look at only half the r
+                  ;; ; values and return "2" if we need to double the count.
+                  ;; :let [num-matches (if (= r (/ n 2)) 1 2)]
+                  :when (> (num-combinations n r) 1000000)]
+              1)))
