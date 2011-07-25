@@ -1624,4 +1624,36 @@ satisfies this problem's criteria."
 
 (defn p52
  []
- (first (take 1 (drop-while (complement p52-num) (iterate inc 1))))
+ (first (take 1 (drop-while (complement p52-num) (iterate inc 1)))))
+
+;; ================
+
+;; There are exactly ten ways of selecting three from five, 12345:
+;;
+;; 123, 124, 125, 134, 135, 145, 234, 235, 245, and 345
+;;
+;; In combinatorics, we use the notation, 5C3 = 10. (<sup>5</sup>C<sub>3</sub>)
+;;
+;; In general,
+;;
+;;   nCr = n! / (r!(n-r)!)
+;;
+;; where r <= n, n! = n*(n1)*...*3*2*1, and 0! = 1.
+;;
+;; It is not until n = 23, that a value exceeds one-million: 23C10 = 1144066.
+;;
+;; How many, not necessarily distinct, values of nCr, for 1 <= n <= 100, are
+;; greater than one-million?
+
+(defn num-combinations
+  "Returns the number of conbinations of n things picked r at a time."
+  [n r]
+  (/ (factorial n) (* (factorial r) (factorial (- n r)))))
+
+(defn p53
+  "Naive solution. Need to simplify the num-combinations forumula."
+  []
+  (count (for [n (range 1 1001)
+               r (range 1 n)            ; too many (for example, nCn is always 1)
+               :when (> (num-combinations n r) 1000000)]
+           1)))
