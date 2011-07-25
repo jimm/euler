@@ -73,7 +73,8 @@
   (- (int c) (int \0)))
 
 (defn alpha-to-int
-  "Converts a Character that is an alpha ([a-zA-Z]) to an int."
+  "Converts a Character that is an alpha ([a-zA-Z]) to an int where a=1,
+b=2..."
   [c]
   (inc (- (int (Character/toLowerCase c)) (int \a))))
 
