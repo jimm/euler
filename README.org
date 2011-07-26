@@ -4,3 +4,5 @@ This project contains my code for [[http://projecteuler.net/][Project Euler]] pr
 off using [[http://www.erlang.org/][Erlang]], but have switched to [[http://clojure.org/][Clojure]].
 
 [[http://projecteuler.net/profile/jmenard.png]]
+
+I moved p54 (poker hands) into a separate file.
