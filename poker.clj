@@ -1,4 +1,5 @@
-(ns euler)
+(ns euler
+  (:use [clojure.string :only (split-lines trim)]))
 
 ;; In the card game poker, a hand consists of five cards and are ranked, from
 ;; lowest to highest, in the following way:
@@ -64,7 +65,7 @@ sequence of card structures. Used only during testing/development. "
 (defn hand-str
   "Used only during testing/development."
   [hand]
-  (.trim (apply str (interleave (sort (map #(str (nth *card-vals* (:value %)) (:suit %)) hand)) (repeat " ")))))
+  (trim (apply str (interleave (sort (map #(str (nth *card-vals* (:value %)) (:suit %)) hand)) (repeat " ")))))
 
 ;; Hand-rank stores information about a hand's value: its rank number from 0
 ;; (simple highest value card) through 9 (royal flush), its hand-val (the
@@ -204,7 +205,7 @@ sequence of card structures. Used only during testing/development. "
 (defn p54
   []
   (reduce +
-          (for [hand (.split (slurp "poker_p54.txt") "[\\r\\n]+")
+          (for [hand (split-lines (slurp "poker_p54.txt"))
                 :let [cards (.split hand " ")
                       p1 (map make-card (take 5 cards))
                       p2 (map make-card (take 5 (drop 5 cards)))]]
