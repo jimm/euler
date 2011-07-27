@@ -1821,3 +1821,52 @@ satisfies this problem's criteria."
                           (rest ne-diagonal)
                           (rest nw-diagonal)
                           (rest sw-diagonal))))))
+
+;; ================
+
+;; Each character on a computer is assigned a unique code and the preferred
+;; standard is ASCII (American Standard Code for Information Interchange).
+;; For example, uppercase A = 65, asterisk (*) = 42, and lowercase k = 107.
+;;
+;; A modern encryption method is to take a text file, convert the bytes to
+;; ASCII, then XOR each byte with a given value, taken from a secret key.
+;; The advantage with the XOR function is that using the same encryption key
+;; on the cipher text, restores the plain text; for example, 65 XOR 42 =
+;; 107, then 107 XOR 42 = 65.
+;;
+;; For unbreakable encryption, the key is the same length as the plain text
+;; message, and the key is made up of random bytes. The user would keep the
+;; encrypted message and the encryption key in different locations, and without
+;; both "halves", it is impossible to decrypt the message.
+;;
+;; Unfortunately, this method is impractical for most users, so the modified
+;; method is to use a password as a key. If the password is shorter than the
+;; message, which is likely, the key is repeated cyclically throughout the
+;; message. The balance for this method is using a sufficiently long password
+;; key for security, but short enough to be memorable.
+;;
+;; Your task has been made easy, as the encryption key consists of three lower
+;; case characters. Using cipher1.txt (right click and 'Save Link/Target
+;; As...'), a file containing the encrypted ASCII codes, and the knowledge that
+;; the plain text must contain common English words, decrypt the message and
+;; find the sum of the ASCII values in the original text.
+
+(defn xor-decrypt
+  [nums c1 c2 c3]
+  (apply str (map char (map bit-xor nums (cycle (list c1 c2 c3))))))
+
+(defn p59
+  []
+  (let [text (first
+              (let [nums (read-string (str "[" (slurp "cipher1_p59.txt") "]"))]
+                (for [c1 (range (int \a) (inc (int \z)))
+                      c2 (range (int \a) (inc (int \z)))
+                      c3 (range (int \a) (inc (int \z)))
+                      :let [decrypted (xor-decrypt nums c1 c2 c3)]
+                      :when (and (pos? (.indexOf decrypted "the"))
+                                 (pos? (.indexOf decrypted "and"))
+                                 (= -1 (.indexOf decrypted (str (char 127)))))]
+                  decrypted)))]
+    (println text)
+    (reduce + (map int text))))
+
