@@ -1,5 +1,5 @@
 (ns euler
-  (:use [clojure.string :only (split-lines trim)]))
+  (:use [clojure.string :only (split split-lines trim)]))
 
 ;; In the card game poker, a hand consists of five cards and are ranked, from
 ;; lowest to highest, in the following way:
@@ -60,7 +60,7 @@
   "Pass this function a string like \"8H 2S AC JS JD\" and it returns a
 sequence of card structures. Used only during testing/development. "
   [s]
-  (map make-card (.split s " ")))
+  (map make-card (split s #" ")))
 
 (defn hand-str
   "Used only during testing/development."
@@ -206,7 +206,7 @@ sequence of card structures. Used only during testing/development. "
   []
   (reduce +
           (for [hand (split-lines (slurp "poker_p54.txt"))
-                :let [cards (.split hand " ")
+                :let [cards (split hand #" ")
                       p1 (map make-card (take 5 cards))
                       p2 (map make-card (take 5 (drop 5 cards)))]]
             (if (player-1-wins? p1 p2)
