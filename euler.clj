@@ -478,7 +478,7 @@ century (1 Jan 1901 to 31 Dec 2000)?"
 
 (defn p22
   []
-  (let [txt (slurp "names_p22.txt")
+  (let [txt (slurp "data/names_p22.txt")
         names (sort (.split (.substring txt 1 (dec (count txt))) "\",\""))
         alpha-vals (map alpha-value names)]
     (loop [sum 0
@@ -1156,7 +1156,7 @@ including that number."
 
 (defn p42
   []
-  (let [txt (slurp "words_p42.txt")
+  (let [txt (slurp "data/words_p42.txt")
         words (sort (.split (.substring txt 1 (dec (count txt))) "\",\""))
         alpha-vals (map alpha-value words)]
     (count (filter #(m-triangle? %) alpha-vals))))
@@ -1858,7 +1858,7 @@ satisfies this problem's criteria."
 (defn p59
   []
   (let [text (first
-              (let [nums (read-string (str "[" (slurp "cipher1_p59.txt") "]"))]
+              (let [nums (read-string (str "[" (slurp "data/cipher1_p59.txt") "]"))]
                 (for [c1 (range (int \a) (inc (int \z)))
                       c2 (range (int \a) (inc (int \z)))
                       c3 (range (int \a) (inc (int \z)))
@@ -1870,3 +1870,13 @@ satisfies this problem's criteria."
     (println text)
     (reduce + (map int text))))
 
+;; ================
+
+;; The primes 3, 7, 109, and 673, are quite remarkable. By taking any two
+;; primes and concatenating them in any order the result will always be prime.
+;; For example, taking 7 and 109, both 7109 and 1097 are prime. The sum of
+;; these four primes, 792, represents the lowest sum for a set of four primes
+;; with this property.
+;;
+;; Find the lowest sum for a set of five primes for which any two primes
+;; concatenate to produce another prime.

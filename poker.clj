@@ -205,7 +205,7 @@ sequence of card structures. Used only during testing/development. "
 (defn p54
   []
   (reduce +
-          (for [hand (split-lines (slurp "poker_p54.txt"))
+          (for [hand (split-lines (slurp "data/poker_p54.txt"))
                 :let [cards (split hand #" ")
                       p1 (map make-card (take 5 cards))
                       p2 (map make-card (take 5 (drop 5 cards)))]]
