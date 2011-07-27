@@ -23,7 +23,7 @@
                (cond (= n (* i i)) false
                      true (prime-test n 2 i i)))))
 
-(def prime? (memoize prime?))
+(def m-prime? (memoize prime?))
 
 (defn easy-prime?
   "Returns non-nil if n is a prime. Looks for n in \"primes\"."
@@ -32,9 +32,18 @@
         (even? n) false
         true (= n (first (drop-while #(< % n) primes)))))
 
-(def easy-prime? (memoize easy-prime?))
+(def m-easy-prime? (memoize easy-prime?))
 
-;;; See also easy2-prime? below
+(defn easy2-prime?
+  "Returns true if n is prime. Does this by seeing if there is any divisor
+other than 1 in the numbers up to (sqrt n)."
+  [n]
+  (cond (= n 2) true
+        (even? n) false
+        true (let [max-divisor-check (/ (- (int (Math/sqrt n)) 2) 2)] ; subtract 2 because we start iterating at 3
+               (not (some #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate #(+ % 2) 3)))))))
+
+(def m-easy2-prime? (memoize easy2-prime?))
 
 (defn next-prime
   "Returns the lowest prime that is greater than n."
@@ -44,7 +53,7 @@
       n-plus-1
       (recur n-plus-1 (inc n-plus-1)))))
 
-(def next-prime (memoize next-prime))
+(def m-next-prime (memoize next-prime))
 
 (defn primes-upto
   "A seq of all primes up to and including n."
@@ -89,16 +98,6 @@ b=2..."
   (let [max-divisor-check (int (Math/sqrt n))
         low-divisors (filter #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate inc 1)))]
   (set (concat low-divisors (map #(unchecked-divide n %) low-divisors)))))
-
-;;; See also easy-prime? and prime? above
-(defn easy2-prime?
-  "Returns true if n is prime. Does this by finding divisors and counting them."
-  [n]
-  (cond (= n 2) true
-        (even? n) false
-        true (= 2 (count (divisors n)))))
-
-(def easy2-prime? (memoize easy2-prime?))
 
 (defn max-val-index
   "Return the index of the maximum value found after applying f to coll."
@@ -1153,14 +1152,14 @@ including that number."
   [n]
   (= n (first (drop-while #(< % n) triangle-numbers))))
 
-(def triangle? (memoize triangle?))
+(def m-triangle? (memoize triangle?))
 
 (defn p42
   []
   (let [txt (slurp "words_p42.txt")
         words (sort (.split (.substring txt 1 (dec (count txt))) "\",\""))
         alpha-vals (map alpha-value words)]
-    (count (filter #(triangle? %) alpha-vals))))
+    (count (filter #(m-triangle? %) alpha-vals))))
 
 ;; ================
 
