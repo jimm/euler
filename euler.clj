@@ -41,7 +41,7 @@ other than 1 in the numbers up to (sqrt n)."
   (cond (= n 2) true
         (even? n) false
         true (let [max-divisor-check (/ (- (int (Math/sqrt n)) 2) 2)] ; subtract 2 because we start iterating at 3
-               (not (some #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate #(+ % 2) 3)))))))
+               (not-any? #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate #(+ % 2) 3))))))
 
 (def m-easy2-prime? (memoize easy2-prime?))
 
@@ -87,6 +87,12 @@ b=2..."
   [c]
   (inc (- (int (Character/toLowerCase c)) (int \a))))
 
+(defmulti sum-of-digits class)
+(defmethod sum-of-digits String [s] (reduce + (map digit-to-int s)))
+(defmethod sum-of-digits Number [n] (sum-of-digits (str n)))
+
+;; Would (reduce * (range 2 (inc n))) be faster than using recur? I should
+;; time them and find out.
 (defn factorial
   [n]
   (loop [cnt n acc 1]
@@ -263,7 +269,7 @@ using the combinitorial function, combining 40 things 20 at a time."
 (defn p16
   "What is the sum of the digits of the number 2^1000?"
   []
-  (reduce + (map digit-to-int (str (BigDecimal. (Math/pow 2 1000))))))
+  (sum-of-digits (expt 2 1000)))
 
 ;; ================
 
@@ -301,9 +307,7 @@ using the combinitorial function, combining 40 things 20 at a time."
   and whitespace but include \"and\", as in \"three hundred and
   forty-two\"."
   []
-  (reduce + (map count
-                 (map only-letters
-                      (map number-to-words (take 1000 (iterate inc 1)))))))
+  (reduce + (map (comp count only-letters number-to-words) (take 1000 (iterate inc 1)))))
 
 ;; ================
 
@@ -413,7 +417,7 @@ century (1 Jan 1901 to 31 Dec 2000)?"
 (defn p20
   "Find the sum of the digits in 100!"
   []
-  (reduce + (map digit-to-int (str (factorial 100)))))
+  (sum-of-digits (factorial 100)))
 
 ;; ================
 
@@ -479,7 +483,7 @@ century (1 Jan 1901 to 31 Dec 2000)?"
 (defn p22
   []
   (let [txt (slurp "data/names_p22.txt")
-        names (sort (.split (.substring txt 1 (dec (count txt))) "\",\""))
+        names (sort (.split (subs txt 1 (dec (count txt))) "\",\""))
         alpha-vals (map alpha-value names)]
     (loop [sum 0
            idx 1
@@ -1157,7 +1161,7 @@ including that number."
 (defn p42
   []
   (let [txt (slurp "data/words_p42.txt")
-        words (sort (.split (.substring txt 1 (dec (count txt))) "\",\""))
+        words (sort (.split (subs txt 1 (dec (count txt))) "\",\""))
         alpha-vals (map alpha-value words)]
     (count (filter #(m-triangle? %) alpha-vals))))
 
@@ -1187,18 +1191,6 @@ including that number."
 ;; even number. Can check for divisible by 5 by ensuring that either "05" or
 ;; "50" are not first two digits (because if they aren't then some
 ;; three-digit number ends with 5 or 0).
-;; (defn p43-str-prime?
-;;   [s]
-;;   (let [str-by-threes (map #(.substring s % (+ % 3)) (range 0 8))
-;;         int-by-threes (map #(Integer/parseInt %) str-by-threes)]
-;;     (and
-;;      (even? (nth int-by-threes 1))
-;;      (some #{3} (divisors (nth int-by-threes 2)))
-;;      (some #{5} (divisors (nth int-by-threes 3)))
-;;      (some #{7} (divisors (nth int-by-threes 4)))
-;;      (some #{11} (divisors (nth int-by-threes 5)))
-;;      (some #{13} (divisors (nth int-by-threes 6)))
-;;      (some #{17} (divisors (nth int-by-threes 7))))))
 
 (defn p43
   []
@@ -1386,7 +1378,7 @@ return n so that the caller can use it as the return value of a call to
   []
   (let [i (reduce + (map #(expt % %) (range 1 1001)))
         s (str i)]
-    (.substring s (- (count s) 10))))
+    (subs s (- (count s) 10))))
 
 ;; ================
 
@@ -1731,11 +1723,10 @@ satisfies this problem's criteria."
 
 (defn p56
   []
-  (let [sum-digits #(reduce + (map digit-to-int (str %)))]
-    (apply max
-           (for [a (range 1 100)
-                 b (range 1 100)]
-             (sum-digits (expt a b))))))
+  (apply max
+         (for [a (range 1 100)
+               b (range 1 100)]
+           (sum-of-digits (expt a b)))))
 
 ;; ================
 
@@ -1853,7 +1844,7 @@ satisfies this problem's criteria."
 
 (defn xor-decrypt
   [nums c1 c2 c3]
-  (apply str (map char (map bit-xor nums (cycle (list c1 c2 c3))))))
+  (apply str (map (comp char bit-xor) nums (cycle (list c1 c2 c3)))))
 
 (defn p59
   []
@@ -1880,3 +1871,68 @@ satisfies this problem's criteria."
 ;;
 ;; Find the lowest sum for a set of five primes for which any two primes
 ;; concatenate to produce another prime.
+;;
+;; - Can't end with 2 or 5, so we can ignore those 2 primes
+;; - For any pair of primes, sums of digits can't add to 3
+
+(defn p60-pair-remarkable?
+  ([pair]
+     (let [[p1 p2] (vec pair)]
+       (p60-pair-remarkable? p1 p2)))
+  ([p1 p2]
+     (let [sp1p2 (str p1 p2)]
+       (and (not= 3 (sum-of-digits sp1p2)) ; eliminate if divisible by 3
+            (m-easy2-prime? (read-string sp1p2))
+            (m-easy2-prime? (read-string (str p2 p1)))))))
+
+(defn p60-remarkable?
+  "If the primes are remarkable as described above, return them."
+  [ps]
+  (loop [pairs (combinations ps 2)]
+    (cond (nil? pairs) ps             ; all pairs are OK, return primes
+          (p60-pair-remarkable? (first pairs)) (recur (next pairs)) ; this pair OK, check next pair
+          true false)))       ; this pair is not remarkable, return false
+
+;; This naive implementation is too slow. It's correct, because it finds the
+;; group of four remarkable primes described above when I change
+;; (combinations ps 5) to (combinations ps 4). In that case, take-n needs to
+;; be 120.
+
+;; (defn p60
+;;   [take-n]
+;;   (let [ps (take take-n (filter #(not= 5 %) (drop 1 primes)))] ; remove 2 and 5
+;;     (reduce + (some p60-remarkable? (combinations ps 5)))))
+
+;; Also tested this version by running with 4 primes (by removing "e"), and
+;; it works, too. Have run with take-n up to 500 and not found the five
+;; primes.
+
+(defn p60
+  [take-n]
+  (let [ps (take take-n (filter #(not= 5 %) (drop 1 primes)))] ; remove 2 and 5
+    (first (for [a ps
+                 b ps
+                 :when (and (not= a b)
+                            (p60-pair-remarkable? a b))
+                 c ps
+                 :when (and (not= a c)
+                            (not= b c)
+                            (p60-pair-remarkable? a c)
+                            (p60-pair-remarkable? b c))
+                 d ps
+                 :when (and (not= a d)
+                            (not= b d)
+                            (not= c d)
+                            (p60-pair-remarkable? a d)
+                            (p60-pair-remarkable? b d)
+                            (p60-pair-remarkable? c d))
+                 e ps
+                 :when (and (not= a e)
+                            (not= b e)
+                            (not= c e)
+                            (not= d e)
+                            (p60-pair-remarkable? a e)
+                            (p60-pair-remarkable? b e)
+                            (p60-pair-remarkable? c e)
+                            (p60-pair-remarkable? d e))]
+             (+ a b c d e)))))
