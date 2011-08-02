@@ -133,6 +133,11 @@ uses empty-val as a default value."
   [m key val empty-val]
   (assoc m key (conj (or (get m key) empty-val) val)))
 
+(defn all-different?
+  "Returns true if all of the items are unique."
+  [& items]
+  (== (count (vec items)) (count (set items))))
+
 ;; ================ problems ================
 
 (defn mults-of-3or5-below-1000 []
@@ -156,8 +161,8 @@ uses empty-val as a default value."
       (recur n (conj vec next-val)))))
 
 (defn fib-upto [n]
-  (cond (= n 0) 0
-        (= n 1) 1
+  (cond (zero? n) 0
+        (== n 1) 1
         true (fib-upto-acc n [0 1])))
 
 (defn p2
@@ -234,7 +239,7 @@ number N."
     (loop [chars (seq s)
            max-product 0]
       (let [five (take 5 chars)]
-        (if (= 5 (count five))
+        (if (== 5 (count five))
           (recur (rest chars)
                  (max max-product (chars-to-product five)))
           max-product)))))
@@ -260,7 +265,7 @@ number N."
         low-divisors (filter #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate inc 1)))
         naive-num-divisors (* 2 (count low-divisors))
         last-divisor (last low-divisors)]
-    (if (= (* last-divisor last-divisor) n)
+    (if (== (* last-divisor last-divisor) n)
       (dec naive-num-divisors)
       naive-num-divisors)))
 
@@ -310,7 +315,7 @@ using the combinitorial function, combining 40 things 20 at a time."
                        (*tens-words* tens)
                        (when (pos? ones) "-")
                        (*digit-words* ones))
-           (= tens 1) (*teens-words* ones)
+           (== tens 1) (*teens-words* ones)
            true       (*digit-words* ones)))))
 
 (defn only-letters
@@ -380,7 +385,7 @@ using the combinitorial function, combining 40 things 20 at a time."
    (recur triangle 1 (list (struct triangle-path (first (first triangle)) (list (first (first triangle))))))
 
    ; Last row: return list of prev-row-paths
-   (= (count triangle) row-idx)
+   (== (count triangle) row-idx)
    prev-row-paths
 
    ; Middle rows: calculate new list of prev-row-paths
@@ -473,8 +478,8 @@ century (1 Jan 1901 to 31 Dec 2000)?"
               (for [x n-and-dn-list
                     y n-and-dn-list
                     :when (and (not= (first x) (first y))
-                               (= (first x) (second y))
-                               (= (second x) (first y)))]
+                               (== (first x) (second y))
+                               (== (second x) (first y)))]
                 (list (first x) (first y))))))))
 
 ;; ================
@@ -548,10 +553,10 @@ in IS, which must be a sorted sequence of integers." [n is]
          acc []]
     (cond
      (>= i n) acc
-     (empty? is)      (recur (inc i) is (conj acc i))
-     (= i (first is)) (recur (inc i) (rest is) acc)
-     (< i (first is)) (recur (inc i) is (conj acc i))
-     true             (recur (inc i) (rest is) (conj acc i)))))
+     (empty? is)       (recur (inc i) is (conj acc i))
+     (== i (first is)) (recur (inc i) (rest is) acc)
+     (< i (first is))  (recur (inc i) is (conj acc i))
+     true              (recur (inc i) (rest is) (conj acc i)))))
 
 (defn p23
   "Find the sum of all the positive integers which cannot be written as the
@@ -795,7 +800,7 @@ of their digits to the power p."
 of their digits."
   []
   (reduce +
-          (filter #(= % (sum-of-pow-of-digits %))
+          (filter #(== % (sum-of-pow-of-digits %))
                   (range 2 (p30-max-num 5)))))
 
 ;; ================
@@ -826,7 +831,7 @@ comprehension."
                   p5 (filter #(f (+ p100 p50 p20 p10 %))       (map #(* % 5)   (range 41)))
                   p2 (filter #(f (+ p100 p50 p20 p10 p5 %))    (map #(* % 2)   (range 101)))
                   p1 (filter #(f (+ p100 p50 p20 p10 p5 p2 %)) (map #(* % 1)   (range 201)))
-                  :when (= 200 (+ p100 p50 p20 p10 p5 p2 p1))]
+                  :when (== 200 (+ p100 p50 p20 p10 p5 p2 p1))]
               1)))))
 
 ;; ================
@@ -931,7 +936,7 @@ comprehension."
 (defn sum-of-factorial-of-digits?
   "Is n the sum of the factorial of its digits?"
   [n]
-  (= n (reduce + (map #(nth digit-factorials (digit-to-int %)) (seq (str n))))))
+  (== n (reduce + (map #(nth digit-factorials (digit-to-int %)) (seq (str n))))))
 
 ;; This is correct, but I wish I knew why 10000000 is an upper bound.
 (defn p34
@@ -961,8 +966,8 @@ of their digits."
 (defn circular-prime?
   "Is p a circular prime?"
   [p]
-  (= (count (str p))
-     (count (take-while divs-prime? (circular-rotations p))))) ; start at one because we know 0'th entry is prime
+  (== (count (str p))
+      (count (take-while divs-prime? (circular-rotations p))))) ; start at one because we know 0'th entry is prime
 
 (defn p35
   []
@@ -1077,7 +1082,7 @@ including that number."
                      a (range 1 p)
                      b (range a p)
                      :let [c (- p (+ a b))]
-                     :when (= (* c c) (+ (* a a) (* b b)))]
+                     :when (== (* c c) (+ (* a a) (* b b)))]
                  p)
         freqs (frequencies perims)]
     ; Find key that has max val. There has to be a built-in function that
@@ -1129,22 +1134,22 @@ including that number."
   (let [digits (reverse (range 1 8))
         pandigitals (for [d7 digits
                           :let [i7 (* d7 1000000)
-                                d6-digits (remove #(= d7 %) digits)]
+                                d6-digits (remove #(== d7 %) digits)]
                           d6 d6-digits
                           :let [i6 (* d6 100000)
-                                d5-digits (remove #(= d6 %) d6-digits)]
+                                d5-digits (remove #(== d6 %) d6-digits)]
                           d5 d5-digits
                           :let [i5 (* d5 10000)
-                                d4-digits (remove #(= d5 %) d5-digits)]
+                                d4-digits (remove #(== d5 %) d5-digits)]
                           d4 d4-digits
                           :let [i4 (* d4 1000)
-                                d3-digits (remove #(= d4 %) d4-digits)]
+                                d3-digits (remove #(== d4 %) d4-digits)]
                           d3 d3-digits
                           :let [i3 (* d3 100)
-                                d2-digits (remove #(= d3 %) d3-digits)]
+                                d2-digits (remove #(== d3 %) d3-digits)]
                           d2 d2-digits
                           :let [i2 (* d2 10)
-                                d1-digits (remove #(= d2 %) d2-digits)]
+                                d1-digits (remove #(== d2 %) d2-digits)]
                           d1 d1-digits
                           :when (odd? d1)
                           :let [num (+ i7 i6 i5 i4 i3 i2 d1)]
@@ -1169,7 +1174,7 @@ including that number."
 
 (defn triangle?
   [n]
-  (= n (first (drop-while #(< % n) triangle-numbers))))
+  (== n (first (drop-while #(< % n) triangle-numbers))))
 
 (def m-triangle? (memoize triangle?))
 
@@ -1214,7 +1219,7 @@ including that number."
           pandigitals (for [d2-d0 mults-of-17
                             :let [d2-d0-str (format "%03d" d2-d0)]
                             :when (or (< d2-d0 100)
-                                      (= 3 (count (set d2-d0-str))))
+                                      (== 3 (count (set d2-d0-str))))
 
                             :let [d3-digits (remove #(some (set d2-d0-str) (str %)) (range 0 10))]
                             d3 d3-digits
@@ -1281,7 +1286,7 @@ including that number."
 (defn pentagonal?
   [n]
   (let [i (/ (inc (Math/sqrt (inc (* 24 n)))) 6)]
-    (= i (int i))))
+    (== i (int i))))
 
 (def pentagonal? (memoize pentagonal?))
 
@@ -1321,12 +1326,12 @@ including that number."
          ip 166, p (nth-pentagonal ip)
          it 286, t (nth-triangle it)]
     (cond
-     (= h p t) h
-     (= h p) (cond
-              (< t p) (recur ih h ip p (inc it) (nth-triangle (inc it)))
-              (> t p) (recur (inc ih) (nth-hexagonal (inc ih))
-                             (inc ip) (nth-pentagonal (inc ip))
-                             it t))
+     (== h p t) h
+     (== h p) (cond
+               (< t p) (recur ih h ip p (inc it) (nth-triangle (inc it)))
+               (> t p) (recur (inc ih) (nth-hexagonal (inc ih))
+                              (inc ip) (nth-pentagonal (inc ip))
+                              it t))
      (< p h) (recur ih h (inc ip) (nth-pentagonal ip) it t)
      (> p h) (recur (inc ih) (nth-hexagonal ih) ip p it t))))
 
@@ -1354,7 +1359,7 @@ return n so that the caller can use it as the return value of a call to
   [n]
   (first (for [prime (drop 1 (primes-upto n)) ; we can skip 2 since 2 + even = even
                i (range 0 (inc (inc (Math/sqrt (/ n 2)))))
-               :when (= n (+ prime (* 2 i i)))]
+               :when (== n (+ prime (* 2 i i)))]
            n)))
 
 (defn p46
@@ -1431,9 +1436,9 @@ elements."
                              d2p))
         ; Find only those values where there is more than one pair with the
         ; same diffs.
-        d2p (filter #(= (count (val %)) 2) diffs-to-pairs)]
+        d2p (filter #(== (count (val %)) 2) diffs-to-pairs)]
     ; find all those where the pattern is [(X Y) (Y Z)]
-    (filter #(= (second (first %)) (first (second %))) (vals d2p))))
+    (filter #(== (second (first %)) (first (second %))) (vals d2p))))
 
 (defn p49
   []
@@ -1511,7 +1516,7 @@ rest of the prime sequence (so we don't have to start at the beginning again
 the next time this method is called)."
   [ps n-digits]
   (let [logval (dec n-digits)]
-    (take-while #(= (int (Math/log10 %)) logval) (drop-while #(< (int (Math/log10 %)) logval) ps))))
+    (take-while #(== (int (Math/log10 %)) logval) (drop-while #(< (int (Math/log10 %)) logval) ps))))
 
 ;; TODO generalize p51-regexes-2 and p51-regexes-2 into one function.
 
@@ -1525,7 +1530,7 @@ return other digits in the number."
         :let [num-leading-digits i
               num-middle-digits (- j i 1)
               num-trailing-digits (- n-digits j 1)
-              match-n #(cond (= 1 %) "\\d"
+              match-n #(cond (== 1 %) "\\d"
                              (pos? %) (str "\\d{" % "}+"))]]
     (list
      (str (match-n num-leading-digits)   ; leading digits
@@ -1552,7 +1557,7 @@ return other digits in the number."
               num-middle-1-digits (- j i 1)
               num-middle-2-digits (- k j 1)
               num-trailing-digits (- n-digits k 1)
-              match-n #(cond (= 1 %) "\\d"
+              match-n #(cond (== 1 %) "\\d"
                              (pos? %) (str "\\d{" % "}+"))]]
     (list
      (str (match-n num-leading-digits)   ; leading digits
@@ -1610,7 +1615,7 @@ satisfies this problem's criteria."
   (apply min (flatten (for [n-digits (range 4 7)
                             regex-func (list p51-regexes-2 p51-regexes-3)
                             :let [longest (p51-find n-digits regex-func)]
-                            :when (= (count longest) 8)]
+                            :when (== (count longest) 8)]
                         longest))))
 
 ;; ================
@@ -1669,7 +1674,7 @@ satisfies this problem's criteria."
                   r (range 1 n)         ; wasteful
                   ;; ; Since nCr == nC(n-r) we can look at only half the r
                   ;; ; values and return "2" if we need to double the count.
-                  ;; :let [num-matches (if (= r (/ n 2)) 1 2)]
+                  ;; :let [num-matches (if (== r (/ n 2)) 1 2)]
                   :when (> (num-combinations n r) 1000000)]
               1)))
 
@@ -1868,7 +1873,7 @@ satisfies this problem's criteria."
                       :let [decrypted (xor-decrypt nums c1 c2 c3)]
                       :when (and (pos? (.indexOf decrypted "the"))
                                  (pos? (.indexOf decrypted "and"))
-                                 (= -1 (.indexOf decrypted (str (char 127)))))]
+                                 (== -1 (.indexOf decrypted (str (char 127)))))]
                   decrypted)))]
     (println text)
     (reduce + (map int text))))
@@ -1980,55 +1985,83 @@ satisfies this problem's criteria."
 
 (def square-numbers (map #(* % %) (iterate inc 1)))
 
-(defn nth-square
-  [n]
-  (* n n))
+(def heptagonal-numbers (map #(/ (* % (- (* 5 %) 3)) 2) (iterate inc 1)))
 
-(def heptagonal-numbers (map #(/ (- (* 5 %) 3) 2) (iterate inc 1)))
+(def octagonal-numbers (map #(* % (- (* 3 %) 2)) (iterate inc 1)))
 
-(defn nth-heptagonal
-  [n]
-  (/ (- (* 5 n) 3) 2))
-
-(def octagonal-numbers (map #(- (* 3 %) 2) (iterate inc 1)))
-
-(defn nth-octagonal
-  [n]
-  (- (* 3 n) 2))
-
-(defn all-different?
-  [& items]
-  (= (count (vec items)) (count (set items))))
+(defn p61-diff-in-each?
+  "Find out if each of the polygonal types is represented by a different number in nset."
+  [nset octs hepts hexes pents squares tris]
+  (let [members {:octs    (filter identity (map #(some #{%} octs) nset))
+                 :hepts   (filter identity (map #(some #{%} hepts) nset))
+                 :hexes   (filter identity (map #(some #{%} hexes) nset))
+                 :pents   (filter identity (map #(some #{%} pents) nset))
+                 :squares (filter identity (map #(some #{%} squares) nset))
+                 :tris    (filter identity (map #(some #{%} tris) nset))}]
+    (and (every? (complement empty?) (vals members))
+         (apply all-different? (vals members)))))
 
 (defn p61
   []
-  (let [octs (take-while #(<= % 9999) (drop-while #(< % 1000) octagonal-numbers))
-        _ (println "octs")
-        hepts (take-while #(<= % 9999) (drop-while #(< % 1000) heptagonal-numbers))
-        _ (println "hepts")
-        hexes (take-while #(<= % 9999) (drop-while #(< % 1000) hexagonal-numbers))
-        _ (println "hexess")
-        pents (take-while #(<= % 9999) (drop-while #(< % 1000) pentagonal-numbers))
-        _ (println "pents")
-        squares (take-while #(<= % 9999) (drop-while #(< % 1000) square-numbers))
-        _ (println "squares")
-        tris (take-while #(<= 9999 %) (drop-while #(< % 1000) triangle-numbers))
-        _ (println "tris")
-        ]
-    (println "num octs =" (count octs))
-    (println (take 20 octs))))
+  (let [in-range (fn [nums] (take-while #(<= % 9999) (drop-while #(< % 1010) nums)))
+        octs    (in-range octagonal-numbers)
+        hepts   (in-range heptagonal-numbers)
+        hexes   (in-range hexagonal-numbers)
+        pents   (in-range pentagonal-numbers)
+        squares (in-range square-numbers)
+        tris    (in-range triangle-numbers)
+        interesting (set (concat octs hepts hexes pents squares tris))
+        != (complement ==)]
+    (apply + (first (set (for [half1 (range 10 100) ; need set because I'm generating dupes :-(
 
-  ;; (for [half1 (range 10 100)
-  ;;       half2 (range 10 100)
-  ;;       half3 (range 10 100)
-  ;;       half4 (range 10 100)
-  ;;       half5 (range 10 100)
-  ;;       half6 (range 10 100)
-  ;;       :let [n1 (+ (* 100 half1) half2)
-  ;;             n2 (+ (* 100 half2) half3)
-  ;;             n3 (+ (* 100 half3) half4)
-  ;;             n4 (+ (* 100 half4) half5)
-  ;;             n5 (+ (* 100 half5) half6)
-  ;;             n6 (+ (* 100 half6) half1)]
-  ;;       :when (all-different? n1 n2 n3 n4 n5 n6)]
-  ;;   (list n1 n2 n3 n4 n5 n6)))
+                               half2 (range 10 100)
+                               :let [n1 (+ (* 100 half1) half2)]
+                               :when (some #{n1} interesting)
+
+                               half3 (range 10 100)
+                               :let [n2 (+ (* 100 half2) half3)]
+                               :when (and (!= n1 n2)
+                                          (some #{n2} interesting))
+
+                               half4 (range 10 100)
+                               :let [n3 (+ (* 100 half3) half4)]
+                               :when (and (!= n1 n3)
+                                          (!= n2 n3)
+                                          (some #{n3} interesting))
+
+                               half5 (range 10 100)
+                               :let [n4 (+ (* 100 half4) half5)]
+                               :when (and (!= n1 n4)
+                                          (!= n2 n4)
+                                          (!= n3 n4)
+                                          (some #{n4} interesting))
+
+                               half6 (range 10 100)
+                               :let [n5 (+ (* 100 half5) half6)]
+                               :when (and (!= n1 n5)
+                                          (!= n2 n5)
+                                          (!= n3 n5)
+                                          (!= n4 n5)
+                                          (some #{n5} interesting))
+
+                               :let [n6 (+ (* 100 half6) half1)]
+                               :when (and (!= n1 n6)
+                                          (!= n2 n6)
+                                          (!= n3 n6)
+                                          (!= n4 n6)
+                                          (!= n5 n6)
+                                          (some #{n6} interesting))
+                               :let [nset (hash-set n1 n2 n3 n4 n5 n6)]
+                               :when (p61-diff-in-each? nset octs hepts hexes pents squares tris)]
+                           nset))))))
+
+(comment
+  (defn p61-in-range [nums] (take-while #(<= % 9999) (drop-while #(< % 1010) nums)))
+  (def octs    (p61-in-range octagonal-numbers)))
+  (def hepts   (p61-in-range heptagonal-numbers)))
+  (def hexes   (p61-in-range hexagonal-numbers)))
+  (def pents   (p61-in-range pentagonal-numbers)))
+  (def squares (p61-in-range square-numbers)))
+  (def tris    (p61-in-range triangle-numbers)))
+  (def interesting (set (concat octs hepts hexes pents squares tris)))
+)
