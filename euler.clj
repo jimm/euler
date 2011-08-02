@@ -2057,12 +2057,12 @@ satisfies this problem's criteria."
 
 (comment
   (defn p61-in-range [nums] (take-while #(<= % 9999) (drop-while #(< % 1010) nums)))
-  (def octs    (p61-in-range octagonal-numbers)))
-  (def hepts   (p61-in-range heptagonal-numbers)))
-  (def hexes   (p61-in-range hexagonal-numbers)))
-  (def pents   (p61-in-range pentagonal-numbers)))
-  (def squares (p61-in-range square-numbers)))
-  (def tris    (p61-in-range triangle-numbers)))
+  (def octs    (p61-in-range octagonal-numbers))
+  (def hepts   (p61-in-range heptagonal-numbers))
+  (def hexes   (p61-in-range hexagonal-numbers))
+  (def pents   (p61-in-range pentagonal-numbers))
+  (def squares (p61-in-range square-numbers))
+  (def tris    (p61-in-range triangle-numbers))
   (def interesting (set (concat octs hepts hexes pents squares tris)))
 )
 
