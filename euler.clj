@@ -14,7 +14,7 @@
           true (recur n (inc 1) j h))))
 
 (defn prime?
-  "Returns true if n is prime. See also easy-prime? and easy2-prime?."
+  "Returns true if n is prime. See also lookup-prime? and divs-prime?."
   [n]
   (cond (= n 2) true
         (even? n) false
@@ -25,16 +25,16 @@
 
 (def m-prime? (memoize prime?))
 
-(defn easy-prime?
+(defn lookup-prime?
   "Returns non-nil if n is a prime. Looks for n in \"primes\"."
   [n]
   (cond (= n 2) true
         (even? n) false
         true (= n (first (drop-while #(< % n) primes)))))
 
-(def m-easy-prime? (memoize easy-prime?))
+(def m-lookup-prime? (memoize lookup-prime?))
 
-(defn easy2-prime?
+(defn divs-prime?
   "Returns true if n is prime. Does this by seeing if there is any divisor
 other than 1 in the numbers up to (sqrt n)."
   [n]
@@ -43,7 +43,7 @@ other than 1 in the numbers up to (sqrt n)."
         true (let [max-divisor-check (/ (- (int (Math/sqrt n)) 2) 2)] ; subtract 2 because we start iterating at 3
                (not-any? #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate #(+ % 2) 3))))))
 
-(def m-easy2-prime? (memoize easy2-prime?))
+(def m-divs-prime? (memoize divs-prime?))
 
 (defn next-prime
   "Returns the lowest prime that is greater than n."
@@ -91,13 +91,22 @@ b=2..."
 (defmethod sum-of-digits String [s] (reduce + (map digit-to-int s)))
 (defmethod sum-of-digits Number [n] (sum-of-digits (str n)))
 
+;; Provides quick lookup of factorials up to 100!.
+(def factorials-to-100
+  (loop [fs [1 1]
+         i 2]
+    (if (< i 101) (recur (conj fs (* i (last fs))) (inc i))
+      fs)))
+
 ;; Would (reduce * (range 2 (inc n))) be faster than using recur? I should
 ;; time them and find out.
 (defn factorial
   [n]
-  (loop [cnt n acc 1]
-    (if (or (zero? cnt) (= 1 cnt)) acc
-      (recur (dec cnt) (* acc cnt)))))
+  (if (<= n 100)
+    (nth factorials-to-100 n)
+    (loop [cnt n acc 1]
+      (if (or (zero? cnt) (= 1 cnt)) acc
+          (recur (dec cnt) (* acc cnt))))))
 
 (defn divisors
   [n]
@@ -117,6 +126,12 @@ b=2..."
           (if (or (nil? max-val) (> val max-val))
             (recur (next coll) (inc i) i val)
             (recur (next coll) (inc i) max-index max-val))))))
+
+(defn assoc-conj
+  "Calls assoc, conj-ing val onto (get map key). If (get map key) is nil,
+uses empty-val as a default value."
+  [m key val empty-val]
+  (assoc m key (conj (or (get m key) empty-val) val)))
 
 ;; ================ problems ================
 
@@ -635,7 +650,7 @@ cycle in its decimal fraction part."
 
 (defn num-primes-generated
   [[a b]]
-  (count (take-while easy2-prime? (map #(+ (* % %) (* a %) b) (iterate inc 0)))))
+  (count (take-while divs-prime? (map #(+ (* % %) (* a %) b) (iterate inc 0)))))
 
 (defn p27
   "Find the product of the coefficients, a and b, for the quadratic
@@ -947,7 +962,7 @@ of their digits."
   "Is p a circular prime?"
   [p]
   (= (count (str p))
-     (count (take-while easy2-prime? (circular-rotations p))))) ; start at one because we know 0'th entry is prime
+     (count (take-while divs-prime? (circular-rotations p))))) ; start at one because we know 0'th entry is prime
 
 (defn p35
   []
@@ -1009,7 +1024,7 @@ including that number."
 (defn truncatable-prime?
   "Return non-nil if all truncatables of n are prime."
   [n]
-  (empty? (drop-while easy-prime? (truncatables n))))
+  (empty? (drop-while lookup-prime? (truncatables n))))
        
 (defn p37
   []
@@ -1133,7 +1148,7 @@ including that number."
                           d1 d1-digits
                           :when (odd? d1)
                           :let [num (+ i7 i6 i5 i4 i3 i2 d1)]
-                          :when (easy2-prime? num)]
+                          :when (divs-prime? num)]
                       num)]
     (first pandigitals)))
 
@@ -1255,6 +1270,8 @@ including that number."
 ;; answer because I didn't figure out how to crawl the pairs of numbers in
 ;; the order that would produce increasing differences.
 
+(def pentagonal-numbers (map #(/ (* % (dec (* 3 %))) 2) (iterate inc 1)))
+
 (defn nth-pentagonal
   [n]
   (/ (* n (dec (* 3 n))) 2))
@@ -1290,6 +1307,8 @@ including that number."
 ;; It can be verified that T285 = P165 = H143 = 40755.
 ;;
 ;; Find the next triangle number that is also pentagonal and hexagonal.
+
+(def hexagonal-numbers (map #(* % (dec (* 2 %))) (iterate inc 1)))
 
 (defn nth-hexagonal
   [n]
@@ -1407,8 +1426,7 @@ elements."
                                    (list p1 p2))]
                               ;; ps (combinations primes 2)]
                          (if ps (let [key (abs (- (first (first ps)) (second (first ps))))]
-                                  (recur (assoc d2p key (conj (into [] (get d2p key))
-                                                              (first ps)))
+                                  (recur (assoc-conj d2p key (first ps) [])
                                          (next ps)))
                              d2p))
         ; Find only those values where there is more than one pair with the
@@ -1425,7 +1443,7 @@ elements."
         digits-to-primes (loop [d2p {}
                                 ps fd-primes]
                            (if ps (let [key (sort (seq (str (first ps))))]
-                                    (recur (assoc d2p key (conj (into [] (get d2p key)) (first ps))) (next ps)))
+                                    (recur (assoc-conj d2p key (first ps) []) (next ps)))
                                d2p))]
     (first
      (remove #(= "148748178147" %)
@@ -1575,7 +1593,7 @@ satisfies this problem's criteria."
     (doseq [rm regex-mask-pairs
             s sps
             :when (.matches s (first rm))]
-      (dosync (ref-set pm-map (assoc @pm-map rm (conj (or (get @pm-map rm) ()) s)))))
+      (dosync (ref-set pm-map (assoc-conj @pm-map rm s ()))))
     ; Now for each (regex, mask) pair further split up the matching values
     ; into those that match the same mask (for example, 1224 and 1334 both
     ; match the mask ".XX.").
@@ -1584,7 +1602,7 @@ satisfies this problem's criteria."
               s (get @pm-map key)
               :let [mask (second key)
                     mask-key (p51-masked mask s)]]
-        (dosync (ref-set mask-map (assoc @mask-map mask-key (conj (or (get @mask-map mask-key) ()) s)))))
+        (dosync (ref-set mask-map (assoc-conj @mask-map mask-key s ()))))
       (map #(Integer/parseInt %) (apply greatest-by #(count %) (vals @mask-map))))))
 
 (defn p51
@@ -1637,12 +1655,6 @@ satisfies this problem's criteria."
 
 ;; We can rewrite this formula as
 ;;  (n(n-1)(n-2)..(n-k+1)) / k!
-
-(def factorials-to-100
-  (loop [fs [1 1]
-         i 2]
-    (if (< i 101) (recur (conj fs (* i (last fs))) (inc i))
-      fs)))
 
 (defn num-combinations
   "Returns the number of conbinations of n things picked r at a time."
@@ -1802,9 +1814,9 @@ satisfies this problem's criteria."
       (let [new-side-length (+ 2 side-length)
             new-num-diagonals (+ num-diagonals 4)
             new-num-primes (+ num-primes
-                              (if (easy2-prime? (first ne-diagonal)) 1 0)
-                              (if (easy2-prime? (first nw-diagonal)) 1 0)
-                              (if (easy2-prime? (first sw-diagonal)) 1 0))]
+                              (if (divs-prime? (first ne-diagonal)) 1 0)
+                              (if (divs-prime? (first nw-diagonal)) 1 0)
+                              (if (divs-prime? (first sw-diagonal)) 1 0))]
         (cond (< (* 10 new-num-primes) new-num-diagonals) (+ 2 side-length)
               true (recur (+ 2 side-length)
                           new-num-diagonals
@@ -1871,68 +1883,69 @@ satisfies this problem's criteria."
 ;;
 ;; Find the lowest sum for a set of five primes for which any two primes
 ;; concatenate to produce another prime.
-;;
-;; - Can't end with 2 or 5, so we can ignore those 2 primes
-;; - For any pair of primes, sums of digits can't add to 3
 
+;; If remarkable then returns (p1 p2), else returns nil.
 (defn p60-pair-remarkable?
   ([pair]
      (let [[p1 p2] (vec pair)]
        (p60-pair-remarkable? p1 p2)))
   ([p1 p2]
-     (let [sp1p2 (str p1 p2)]
-       (and (not= 3 (sum-of-digits sp1p2)) ; eliminate if divisible by 3
-            (m-easy2-prime? (read-string sp1p2))
-            (m-easy2-prime? (read-string (str p2 p1)))))))
+     (let [sp1p2 (str p1 p2)
+           p1p2 (read-string sp1p2)
+           p2p1 (read-string (str p2 p1))]
+       (when (and (m-divs-prime? p1p2)
+                  (m-divs-prime? p2p1))
+         (list p1 p2)))))
 
 (defn p60-remarkable?
   "If the primes are remarkable as described above, return them."
-  [ps]
-  (loop [pairs (combinations ps 2)]
-    (cond (nil? pairs) ps             ; all pairs are OK, return primes
+  [plist]
+  (loop [pairs (combinations plist 2)]
+    (cond (nil? pairs) plist            ; all pairs are OK, return primes
           (p60-pair-remarkable? (first pairs)) (recur (next pairs)) ; this pair OK, check next pair
           true false)))       ; this pair is not remarkable, return false
 
 ;; This naive implementation is too slow. It's correct, because it finds the
 ;; group of four remarkable primes described above when I change
-;; (combinations ps 5) to (combinations ps 4). In that case, take-n needs to
-;; be 120.
+;; (combinations ps 5) to (combinations ps 4).
 
 ;; (defn p60
-;;   [take-n]
-;;   (let [ps (take take-n (filter #(not= 5 %) (drop 1 primes)))] ; remove 2 and 5
+;;   [max-prime]
+;;   (let [ps (take-while #(<= % max-prime) (filter #(not= 5 %) (drop 1 primes)))] ; remove 2 and 5
 ;;     (reduce + (some p60-remarkable? (combinations ps 5)))))
 
 ;; Also tested this version by running with 4 primes (by removing "e"), and
-;; it works, too. Have run with take-n up to 500 and not found the five
-;; primes.
+;; it works, too. It runs slowly, but it works.
 
 (defn p60
-  [take-n]
-  (let [ps (take take-n (filter #(not= 5 %) (drop 1 primes)))] ; remove 2 and 5
-    (first (for [a ps
-                 b ps
-                 :when (and (not= a b)
-                            (p60-pair-remarkable? a b))
-                 c ps
-                 :when (and (not= a c)
-                            (not= b c)
-                            (p60-pair-remarkable? a c)
+  [max-prime]
+  (let [ps (take-while #(<= % max-prime) (filter #(not= 5 %) (drop 1 primes))) ; remove 2 and 5
+        nps (count ps)]
+    (first (for [ai (range 0 nps)
+                 :let [a (nth ps ai)
+                       _ (println "a =" a)]
+
+                 bi (range (inc ai) nps)
+                 :let [b (nth ps bi)]
+                 :when (p60-pair-remarkable? a b)
+
+                 ci (range (inc bi) nps)
+                 :let [c (nth ps ci)]
+                 :when (and (p60-pair-remarkable? a c)
                             (p60-pair-remarkable? b c))
-                 d ps
-                 :when (and (not= a d)
-                            (not= b d)
-                            (not= c d)
-                            (p60-pair-remarkable? a d)
+
+                 di (range (inc ci) nps)
+                 :let [d (nth ps di)]
+                 :when (and (p60-pair-remarkable? a d)
                             (p60-pair-remarkable? b d)
                             (p60-pair-remarkable? c d))
-                 e ps
-                 :when (and (not= a e)
-                            (not= b e)
-                            (not= c e)
-                            (not= d e)
-                            (p60-pair-remarkable? a e)
+
+                 ei (range (inc di) nps)
+                 :let [e (nth ps ei)]
+                 :when (and (p60-pair-remarkable? a e)
                             (p60-pair-remarkable? b e)
                             (p60-pair-remarkable? c e)
                             (p60-pair-remarkable? d e))]
-             (+ a b c d e)))))
+             (do
+               (println a b c d e "=>")
+               (+ a b c d e))))))
