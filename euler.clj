@@ -2090,10 +2090,28 @@ satisfies this problem's criteria."
 
 (defn p62
   []
-  (println "here we go")
   (first (for [num-digits (iterate inc 8)
                :let [n-digit-cubes (take-while #(== (count (str %)) num-digits) (drop-while #(< (count (str %)) num-digits) cubes))
                      min-cube-with-five-perms (find-min-cube-with-five-perms n-digit-cubes)]
                :when min-cube-with-five-perms]
            min-cube-with-five-perms)))
 
+;; ================
+
+;; The 5-digit number 16807=7^5, is also a fifth power. Similarly, the 9-digit
+;; number 134217728=8^9, is a ninth power.
+;;
+;; How many n-digit positive integers exist which are also an nth power?
+
+(defn p63
+  "Print all numbers that are n digits and are nth powers of a positive int."
+  []
+  (loop [power 1
+         nums ()]
+    (let [more-nums (for [base (range 1 10) ; base 1-9
+                          :let [n (expt base power)]
+                          :when (== power (count (str n)))]
+                      n)]
+      (if (empty? more-nums)
+        (count (set nums))
+        (recur (inc power) (concat nums more-nums))))))
