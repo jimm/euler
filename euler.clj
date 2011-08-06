@@ -16,11 +16,11 @@
 (defn prime?
   "Returns true if n is prime. See also lookup-prime? and divs-prime?."
   [n]
-  (cond (= n 2) true
+  (cond (== n 2) true
         (even? n) false
         true (let [n (int n)
                    i (Math/floor (Math/sqrt n))]
-               (cond (= n (* i i)) false
+               (cond (== n (* i i)) false
                      true (prime-test n 2 i i)))))
 
 (def m-prime? (memoize prime?))
@@ -28,9 +28,9 @@
 (defn lookup-prime?
   "Returns non-nil if n is a prime. Looks for n in \"primes\"."
   [n]
-  (cond (= n 2) true
+  (cond (== n 2) true
         (even? n) false
-        true (= n (first (drop-while #(< % n) primes)))))
+        true (== n (first (drop-while #(< % n) primes)))))
 
 (def m-lookup-prime? (memoize lookup-prime?))
 
@@ -38,7 +38,8 @@
   "Returns true if n is prime. Does this by seeing if there is any divisor
 other than 1 in the numbers up to (sqrt n)."
   [n]
-  (cond (= n 2) true
+  (cond (< n 2) false
+        (== n 2) true
         (even? n) false
         true (let [max-divisor-check (/ (- (int (Math/sqrt n)) 2) 2)] ; subtract 2 because we start iterating at 3
                (not-any? #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate #(+ % 2) 3))))))
@@ -105,7 +106,7 @@ b=2..."
   (if (<= n 100)
     (nth factorials-to-100 n)
     (loop [cnt n acc 1]
-      (if (or (zero? cnt) (= 1 cnt)) acc
+      (if (or (zero? cnt) (== 1 cnt)) acc
           (recur (dec cnt) (* acc cnt))))))
 
 (defn divisors
@@ -2075,3 +2076,24 @@ satisfies this problem's criteria."
 ;;
 ;; Find the smallest cube for which exactly five permutations of its digits
 ;; are cubes.
+
+(def cubes (for [i (iterate inc 1)] (* i i i)))
+
+(defn find-min-cube-with-five-perms
+  "Given a list of cubes, all with the same number of digits, find the first
+  group of five cubes that are permutations of each other."
+  [n-digit-cubes]
+  ;; DEBUG finds first set of digits and returns that
+  (let [found (first (drop-while #(< (val %) 5) (frequencies (map (comp sort str) n-digit-cubes))))]
+    (when found                         ; we found five cubes that have the same digits
+      (first (filter #(= (key found) (sort (str %))) n-digit-cubes)))))
+
+(defn p62
+  []
+  (println "here we go")
+  (first (for [num-digits (iterate inc 8)
+               :let [n-digit-cubes (take-while #(== (count (str %)) num-digits) (drop-while #(< (count (str %)) num-digits) cubes))
+                     min-cube-with-five-perms (find-min-cube-with-five-perms n-digit-cubes)]
+               :when min-cube-with-five-perms]
+           min-cube-with-five-perms)))
+
