@@ -2104,14 +2104,13 @@ satisfies this problem's criteria."
 ;; How many n-digit positive integers exist which are also an nth power?
 
 (defn p63
-  "Print all numbers that are n digits and are nth powers of a positive int."
   []
   (loop [power 1
          nums ()]
-    (let [more-nums (for [base (range 1 10) ; base 1-9
+    (let [more-nums (for [base (range 1 10) ; base 1-9; 10^x has x+1 digits
                           :let [n (expt base power)]
                           :when (== power (count (str n)))]
                       n)]
       (if (empty? more-nums)
-        (count (set nums))
+        (count (set nums))              ; set removes repeated 1s etc.
         (recur (inc power) (concat nums more-nums))))))
