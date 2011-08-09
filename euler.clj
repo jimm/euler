@@ -2,7 +2,7 @@
   (:use [clojure.contrib.lazy-seqs :only (primes fibs)]
         [clojure.set :only (difference)]
         [clojure.contrib.combinatorics :only (lex-permutations combinations)]
-        [clojure.contrib.math :only (expt abs)]
+        [clojure.contrib.math :only (expt abs exact-integer-sqrt)]
         [clojure.contrib.greatest-least :only (greatest-by)]))
 
 (defn- prime-test
@@ -2114,3 +2114,91 @@ satisfies this problem's criteria."
       (if (empty? more-nums)
         (count (set nums))              ; set removes repeated 1s etc.
         (recur (inc power) (concat nums more-nums))))))
+
+;; ================
+
+;; See http://projecteuler.net/index.php?section=problems&id=64
+
+;; I approached this problem a bit differently than most: the fractions are manipulated
+;; symbolically.
+
+;; A p64-frac struct holds normalized (sqrt in numerator) and non-normalized
+;; (sqrt in denominator) fractions that are part of a continued fraction.
+;; See p64-frac-str for a function that returns a human readable
+;; non-parseable string representation.
+;;
+;; int-sqrt is not needed by the representation of the fraction, but it is
+;; useful to carry this value around instead of having to recompute it or
+;; pass it in to functions separately all the time.
+(defstruct p64-frac :n :int-sqrt :numer-mult :numer-const :denom-const :normalized)
+
+(defn p64-frac-str
+  "Print a p64-frac. Not pretty. For debugging."
+  [frac]
+  (let [posneg #(if (pos? %) (str "+" %) (str "-" (abs %)))]
+    (if (:normalized frac)
+      (let [nm (:numer-mult frac)]
+        (str (if (not= nm 1) (str nm "*")) "(sqrt(" (:n frac) ")" (posneg (:numer-const frac)) ") / "
+             (:denom-const frac)))
+      (str (:numer-const frac) " / (sqrt(" (:n frac) ")" (posneg (:denom-const frac)) ")"))))
+
+(defn invert-p64-frac
+  "Return a p64-frac that is 1 / frac."
+  [frac]
+  (struct p64-frac (:n frac) (:int-sqrt frac) 1 (:denom-const frac) (:numer-const frac) (not (:normalized frac))))
+
+(defn symbolically-normalize
+  "Given a non-normalized p64-frac
+
+    numer-const / (sqrt(N) + denom-const)
+
+with the sqrt in the denominator, return a new p64-frac where sqrt is in the
+numerator, which will be of the form
+
+  (numer-mult * (sqrt(N) + numer-const) / denom-const
+
+If frac is already normalized, return it unchanged."
+  [frac]
+  (if (:normalized frac) frac
+      (let [denom-const (- (:n frac) (* (:denom-const frac) (:denom-const frac)))
+            numer-mult (:numer-const frac)
+            numer-const (- (:denom-const frac))
+            nd-ratio (/ numer-mult denom-const)]
+        (struct p64-frac (:n frac) (:int-sqrt frac)
+                (if (ratio? nd-ratio) (numerator nd-ratio) nd-ratio)
+                numer-const
+                (if (ratio? nd-ratio) (denominator nd-ratio) 1)
+                true))))
+
+(defn p64-next-step
+  "Takes a non-normalized p64-frac and returns a pair of values consisting
+of the integer portion and a normalized p64-frac representing the
+remainder."
+  [frac]
+  (let [frac2 (symbolically-normalize (invert-p64-frac frac))
+        int-portion (int (/ (* (:numer-mult frac2) (+ (:int-sqrt frac2) (:numer-const frac2)))
+                            (:denom-const frac2)))
+        new-numer-const (- (:numer-const frac2) (* int-portion (:denom-const frac2)))]
+    (list int-portion (assoc frac2 :numer-const new-numer-const))))
+
+(defn sqrt-continued-fraction-representation
+  "Return repeating sequence portion of continued fraction representation of
+the square root of n, ignoring the first integer portion."
+  [n]
+  (let [[int-portion rem] (exact-integer-sqrt n)]
+    (if (zero? rem) ()
+        (loop [frac (struct p64-frac n int-portion 1 (- int-portion) 1 true)
+               seen-fracs []
+               nums []]                 ; don't want to capture initial int-portion
+          (let [[int-portion new-frac] (p64-next-step frac)]
+            (cond (zero? int-portion) ()             ; exact sqare root
+                  (some #{new-frac} seen-fracs) nums ; found repeat
+                  true (recur new-frac (conj seen-fracs new-frac) (conj nums int-portion))))))))
+
+(defn p64
+  []
+  (let [f (comp odd? count sqrt-continued-fraction-representation)]
+    (count
+     (for [n (range 2 10001)
+           :when (f n)]
+         n))))
