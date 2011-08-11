@@ -1,7 +1,7 @@
 (ns euler
   (:use [clojure.contrib.lazy-seqs :only (primes fibs)]
         [clojure.set :only (difference)]
-        [clojure.tring :only (split-lines)]
+        [clojure.string :only (split-lines)]
         [clojure.contrib.combinatorics :only (lex-permutations combinations)]
         [clojure.contrib.math :only (expt abs exact-integer-sqrt)]
         [clojure.contrib.greatest-least :only (greatest-by)]))
@@ -2295,9 +2295,10 @@ term, and returns the ratio that is the nth convergent term."
 ;;
 ;; See problem 18.
 
-;; (defn p67
-;;   []
-;;   ;; TODO use read-string on resulting munged text
-;;   (let [lines (split-lines (slurp "data/triangle_p67.txt"))
-;;         last-row-paths (max-paths-to triangle 0 nil)]
-;;     (apply max (map :value last-row-paths))))
+(defn p67
+  []
+  (let [lines (split-lines (slurp "data/triangle_p67.txt"))
+        t-text (str "[[" (apply str (interpose "][" lines)) "]]")
+        triangle (read-string (.replaceAll (.replaceAll t-text " 0" " ") "\\[0" "[")) ; need to remove leading 0s
+        last-row-paths (max-paths-to triangle 0 nil)]
+    (apply max (map :value last-row-paths))))
