@@ -2202,3 +2202,65 @@ the square root of n, ignoring the first integer portion."
      (for [n (range 2 10001)
            :when (f n)]
          n))))
+
+;; ================
+
+;; See http://projecteuler.net/index.php?section=problems&id=65
+;;
+;; The first ten terms in the sequence of convergents for e are:
+;;
+;; 2, 3, 8/3, 11/4, 19/7, 87/32, 106/39, 193/71, 1264/465, 1457/536, ...
+
+;; Includes the initial integer 2 and the fraction constants a(k)
+;; where the nth term of e-terms is a(k-1).
+(def e-terms (concat '(2) (mapcat #(list 1 (* 2 %) 1) (iterate inc 1))))
+
+(defn p65-nth-term
+  [n]
+  (let [terms (reverse (take n e-terms))]
+    (loop [ert (next terms)
+           val (/ (first terms))]
+      (if (or (nil? ert) (empty? ert)) val
+          (recur (next ert) (+ (first ert) (/ 1 val)))))))
+
+(defn p65
+  []
+  (sum-of-digits (numerator (p65-nth-term 100))))
+
+;; ================
+
+;; Consider quadratic Diophantine equations of the form:
+;;
+;; x^2 – Dy^2 = 1
+;;
+;; For example, when D=13, the minimal solution in x is 649^2 - 13*180^2 = 1.
+;;
+;; It can be assumed that there are no solutions in positive integers when D
+;; is square.
+;;
+;; By finding minimal solutions in x for D = {2, 3, 5, 6, 7}, we obtain the
+;; following:
+;;
+;; 3^2 – 2*2^2 = 1
+;; 2^2 – 3*1^2 = 1
+;; 9^2 – 5*4^2 = 1
+;; 5^2 – 6*2^2 = 1
+;; 8^2 – 7*3^2 = 1
+;;
+;; Hence, by considering minimal solutions in x for D <= 7, the largest x is
+;; obtained when D=5.
+;;
+;; Find the value of D <= 1000 in minimal solutions of x for which the
+;; largest value of x is obtained.
+
+;; (defn minimal-diophantine-x
+;;   [d]
+  
+
+;; (defn p66
+;;   []
+;;   (apply max
+;;          (for [d (range 8 1001)
+;;                :let [[_ rem] (exact-integer-sqrt d)]
+;;                :when (pos? rem)]        ; d is not a square
+;;            (minimal-diophantine-x d))))
