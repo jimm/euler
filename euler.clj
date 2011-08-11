@@ -1,6 +1,7 @@
 (ns euler
   (:use [clojure.contrib.lazy-seqs :only (primes fibs)]
         [clojure.set :only (difference)]
+        [clojure.tring :only (split-lines)]
         [clojure.contrib.combinatorics :only (lex-permutations combinations)]
         [clojure.contrib.math :only (expt abs exact-integer-sqrt)]
         [clojure.contrib.greatest-least :only (greatest-by)]))
@@ -349,7 +350,7 @@ using the combinitorial function, combining 40 things 20 at a time."
 ;; with a triangle containing one-hundred rows; it cannot be solved by brute
 ;; force, and requires a clever method! ;o)
 
-(def triangle [
+(def p18-triangle [
 [                             75]
 [                           95 64]
 [                         17 47 82]
@@ -416,7 +417,7 @@ using the combinitorial function, combining 40 things 20 at a time."
 (defn p18
   "Find max path values of triangle."
   []
-  (let [last-row-paths (max-paths-to triangle 0 nil)]
+  (let [last-row-paths (max-paths-to p18-triangle 0 nil)]
     (apply max (map :value last-row-paths))))
 
 ;; ================
@@ -2119,8 +2120,8 @@ satisfies this problem's criteria."
 
 ;; See http://projecteuler.net/index.php?section=problems&id=64
 
-;; I approached this problem a bit differently than most: the fractions are manipulated
-;; symbolically.
+;; I approached this problem a bit differently than most: the fractions are
+;; manipulated symbolically.
 
 ;; A p64-frac struct holds normalized (sqrt in numerator) and non-normalized
 ;; (sqrt in denominator) fractions that are part of a continued fraction.
@@ -2182,22 +2183,25 @@ remainder."
     (list int-portion (assoc frac2 :numer-const new-numer-const))))
 
 (defn sqrt-continued-fraction-representation
-  "Return repeating sequence portion of continued fraction representation of
-the square root of n, ignoring the first integer portion."
+  "Return a vector whose first element is the integer part and second
+element is a vector containing the repeating sequence portion of the
+continued fraction representation of the square root of n."
   [n]
   (let [[int-portion rem] (exact-integer-sqrt n)]
-    (if (zero? rem) ()
+    (if (zero? rem) [int-portion []]
         (loop [frac (struct p64-frac n int-portion 1 (- int-portion) 1 true)
                seen-fracs []
-               nums []]                 ; don't want to capture initial int-portion
-          (let [[int-portion new-frac] (p64-next-step frac)]
-            (cond (zero? int-portion) ()             ; exact sqare root
-                  (some #{new-frac} seen-fracs) nums ; found repeat
-                  true (recur new-frac (conj seen-fracs new-frac) (conj nums int-portion))))))))
+               nums []]
+          (let [[term new-frac] (p64-next-step frac)]
+            (cond (zero? term) [int-portion []] ; exact sqare root
+                  (some #{new-frac} seen-fracs) [int-portion nums] ; found repeat
+                  true (recur new-frac (conj seen-fracs new-frac) (conj nums term))))))))
 
 (defn p64
+  "Return the number of square roots of 1 <= N <= 10000 whose repeating
+sequences' lengths are odd."
   []
-  (let [f (comp odd? count sqrt-continued-fraction-representation)]
+  (let [f (comp odd? count second sqrt-continued-fraction-representation)]
     (count
      (for [n (range 2 10001)
            :when (f n)]
@@ -2213,19 +2217,21 @@ the square root of n, ignoring the first integer portion."
 
 ;; Includes the initial integer 2 and the fraction constants a(k)
 ;; where the nth term of e-terms is a(k-1).
-(def e-terms (concat '(2) (mapcat #(list 1 (* 2 %) 1) (iterate inc 1))))
+(def e-frac-consts (concat '(2) (mapcat #(list 1 (* 2 %) 1) (iterate inc 1))))
 
-(defn p65-nth-term
-  [n]
-  (let [terms (reverse (take n e-terms))]
-    (loop [ert (next terms)
-           val (/ (first terms))]
-      (if (or (nil? ert) (empty? ert)) val
-          (recur (next ert) (+ (first ert) (/ 1 val)))))))
+(defn nth-convergent-term
+  "Takes a list of continued fraction constants, including the first integer
+term, and returns the ratio that is the nth convergent term."
+  [frac-consts n]
+  (let [fcs (reverse (take n frac-consts))]
+    (loop [ak (next fcs)
+           val (first fcs)]
+      (if (or (nil? ak) (empty? ak)) val
+          (recur (next ak) (+ (first ak) (/ 1 val)))))))
 
 (defn p65
   []
-  (sum-of-digits (numerator (p65-nth-term 100))))
+  (sum-of-digits (numerator (nth-convergent-term e-frac-consts 100))))
 
 ;; ================
 
@@ -2252,15 +2258,46 @@ the square root of n, ignoring the first integer portion."
 ;;
 ;; Find the value of D <= 1000 in minimal solutions of x for which the
 ;; largest value of x is obtained.
+;;
+;; These solutions yield rational approximations of the form x/y to the
+;; square root of D.
 
-;; (defn minimal-diophantine-x
-;;   [d]
-  
+;; A naive solution where we keep trying x's until there is a y such that
+;;
+;;   (x^2 - 1)/D == y^2
+;;
+;; takes too long. Research lead to the conclusion that we need to use
+;; sqrt(D)'s continued fraction representation and find the first term where
+;; x/y is a solution for the Diophantine equation.
 
-;; (defn p66
+(defn minimal-diophantine-x
+  [d]
+  (let [[int-portion repeating-terms] (sqrt-continued-fraction-representation d)
+        frac-consts (concat [int-portion] (cycle repeating-terms))
+        diophantine-solution? (fn [d x y] (== 1 (- (* x x) (* d y y))))]
+    (if (zero? (count repeating-terms)) -1 ; d is an exact square
+        (loop [n 1]
+          (let [r (nth-convergent-term frac-consts n)
+                x (if (ratio? r) (numerator r) r)
+                y (if (ratio? r) (denominator r) 1)]
+            (if (diophantine-solution? d x y) x
+                (recur (inc n))))))))
+
+(defn p66
+  []
+  (apply max-key minimal-diophantine-x (range 8 1001)))
+    
+
+;; ================
+
+;; Find the maximum total from top to bottom in data/triangle_p67.txt, a 15K
+;; text file containing a triangle with one-hundred rows.
+;;
+;; See problem 18.
+
+;; (defn p67
 ;;   []
-;;   (apply max
-;;          (for [d (range 8 1001)
-;;                :let [[_ rem] (exact-integer-sqrt d)]
-;;                :when (pos? rem)]        ; d is not a square
-;;            (minimal-diophantine-x d))))
+;;   ;; TODO use read-string on resulting munged text
+;;   (let [lines (split-lines (slurp "data/triangle_p67.txt"))
+;;         last-row-paths (max-paths-to triangle 0 nil)]
+;;     (apply max (map :value last-row-paths))))
