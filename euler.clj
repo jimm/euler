@@ -117,7 +117,9 @@ b=2..."
   (set (concat low-divisors (map #(unchecked-divide n %) low-divisors)))))
 
 (defn max-val-index
-  "Return the index of the maximum value found after applying f to coll."
+  "Return the index of the maximum value found after applying f to coll.
+
+See also core/max-key, but this is faster for what I need."
   [f coll]
   (loop [coll coll
          i 0
@@ -626,6 +628,7 @@ for a previously seen divisor/remainder pair that indicates a cycle."
   "Find the value of d < 1000 for which 1/d contains the longest recurring
 cycle in its decimal fraction part."
   []
+  ;; Could use core/max-key but using max-val-index is faster.
   (let [recurring-cycles (map recurring-digits (range 1 1000))]
     (inc (max-val-index count recurring-cycles))))
 
@@ -2302,3 +2305,6 @@ term, and returns the ratio that is the nth convergent term."
         triangle (read-string (.replaceAll (.replaceAll t-text " 0" " ") "\\[0" "[")) ; need to remove leading 0s
         last-row-paths (max-paths-to triangle 0 nil)]
     (apply max (map :value last-row-paths))))
+
+;; ================
+
