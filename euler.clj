@@ -2,7 +2,7 @@
   (:use [clojure.contrib.lazy-seqs :only (primes fibs)]
         [clojure.set :only (difference)]
         [clojure.string :only (split-lines)]
-        [clojure.contrib.combinatorics :only (lex-permutations combinations)]
+        [clojure.contrib.combinatorics :only (lex-permutations combinations permutations)]
         [clojure.contrib.math :only (expt abs exact-integer-sqrt)]
         [clojure.contrib.greatest-least :only (greatest-by)]))
 
@@ -2308,3 +2308,62 @@ term, and returns the ratio that is the nth convergent term."
 
 ;; ================
 
+;; http://projecteuler.net/index.php?section=problems&id=68
+;; Find the maximum 16-digit string for a "magic" 5-gon.
+
+(def fivegon-order [[0 1 2] [3 2 4] [5 4 6] [7 6 8] [9 8 1]])
+
+(defn make-fgon
+  [coll]
+  (let [v (vec coll)]
+    (map #(vector (nth v (nth % 0)) (nth v (nth % 1)) (nth v (nth % 2))) fivegon-order)))
+
+(defn fivegon-description
+  "Take fivegon and turn it into a single integer per the directions in the
+problem description."
+  [fgon]
+  (let [min-group (apply min-key first fgon)
+        in-order (take 5 (drop-while #(not= min-group %) (cycle fgon)))]
+    (read-string (apply str (flatten in-order)))))
+
+(defn magic-5gon?
+  "If we have a magic 5-gon, return the 16-digit string representing it."
+ [coll]
+ (let [fgon (make-fgon coll)
+       sum1 (reduce + (first fgon))
+       matching-sums (take-while #(== sum1 (reduce + %)) (rest fgon))]
+   (when (== (dec (count fivegon-order)) (count matching-sums))
+     (fivegon-description fgon))))
+
+(defn p68
+  []
+  (apply max (filter #(when (and % (== (count (str %)) 16)) %)
+                     (map #(magic-5gon? %) (permutations (range 1 11))))))
+
+;; ================
+
+(defn num-divisors
+  "Number of divisors of n, including 1 and itself. Does less work than
+calling (count (divisors n))."
+  [n]
+  (if (<= n 2)
+    1
+    (let [max-divisor-check (int (Math/sqrt n))
+          low-divisors (filter #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate inc 1)))]
+      (if (== n (* max-divisor-check max-divisor-check))
+        (dec (* 2 (count low-divisors)))
+        (* 2 (count low-divisors))))))
+
+(defn phi
+  [n]
+  (println "divisors" n "=" (divisors n))
+  (println "num-divisors" n "=" (num-divisors n))
+  (- n (num-divisors n) 2))
+
+(defn n-over-phi
+  [n]
+  (/ n (phi n)))
+
+(defn p69
+  []
+  (apply max-key n-over-phi (range 2 1000001)))
