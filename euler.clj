@@ -2345,25 +2345,16 @@ problem description."
 ;; http://projecteuler.net/index.php?section=problems&id=69
 ;; Find the number up to 1,000,000 with a max value of N/phi(N).
 
-;; This is correct, but WAY too slow. Probably need to get clever about
-;; memoization or something like that.
+;; My original solution that calculated phi was correct, but WAY too slow.
+;; A max value is found when there are a maximal number of primes as
+;; divisors. When does that happen? When the number is made up of as many
+;; primes as possible.
 
-(def primes-upto-million (primes-upto 1000000))
-
-(defn prime-factors
-  [n]
-  (let [ps (take-while #(<= % n) primes-upto-million)]
-    (filter #(zero? (unchecked-remainder n %)) ps)))
-
-(defn phi
-  [n]
-  (let [pf (prime-factors n)]
-    (apply * (conj (map #(- 1 (/ 1 %)) pf) n))))
-
-(defn n-over-phi
-  [n]
-  (/ n (phi n)))
-
+;; Simplified: product of primes that is less than 1,000,000.
 (defn p69
   []
-  (apply max-key n-over-phi (range 2 1000001)))
+  (loop [prod 1
+         ps primes]
+    (let [p (first ps)]
+    (if (> (* prod p) 100000) (* prod p)
+        (recur (* prod p) (rest ps))))))
