@@ -2342,23 +2342,23 @@ problem description."
 
 ;; ================
 
-(defn num-divisors
-  "Number of divisors of n, including 1 and itself. Does less work than
-calling (count (divisors n))."
+;; http://projecteuler.net/index.php?section=problems&id=69
+;; Find the number up to 1,000,000 with a max value of N/phi(N).
+
+;; This is correct, but WAY too slow. Probably need to get clever about
+;; memoization or something like that.
+
+(def primes-upto-million (primes-upto 1000000))
+
+(defn prime-factors
   [n]
-  (if (<= n 2)
-    1
-    (let [max-divisor-check (int (Math/sqrt n))
-          low-divisors (filter #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate inc 1)))]
-      (if (== n (* max-divisor-check max-divisor-check))
-        (dec (* 2 (count low-divisors)))
-        (* 2 (count low-divisors))))))
+  (let [ps (take-while #(<= % n) primes-upto-million)]
+    (filter #(zero? (unchecked-remainder n %)) ps)))
 
 (defn phi
   [n]
-  (println "divisors" n "=" (divisors n))
-  (println "num-divisors" n "=" (num-divisors n))
-  (- n (num-divisors n) 2))
+  (let [pf (prime-factors n)]
+    (apply * (conj (map #(- 1 (/ 1 %)) pf) n))))
 
 (defn n-over-phi
   [n]
