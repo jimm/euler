@@ -142,6 +142,11 @@ uses empty-val as a default value."
   [& items]
   (== (count (vec items)) (count (set items))))
 
+(defn numeric-permutation?
+  "Returns true if i and j are numbers whose digits are permutations of each other."
+  [i j]
+  (= (sort (str i)) (sort (str j))))
+
 ;; ================ problems ================
 
 (defn mults-of-3or5-below-1000 []
@@ -2343,12 +2348,12 @@ problem description."
 ;; ================
 
 ;; http://projecteuler.net/index.php?section=problems&id=69
-;; Find the number up to 1,000,000 with a max value of N/phi(N).
+;; Find the number up to 1,000,000 with a max value of N/φ(N).
 
-;; My original solution that calculated phi was correct, but WAY too slow.
-;; A max value is found when there are a maximal number of primes as
-;; divisors. When does that happen? When the number is made up of as many
-;; primes as possible.
+;; My original solution that calculated φ was correct, but WAY too slow. A
+;; max value is found when there are a maximal number of primes as divisors.
+;; When does that happen? When the number is made up of as many primes as
+;; possible.
 
 ;; Simplified: product of primes that is less than 1,000,000.
 (defn p69
@@ -2358,3 +2363,46 @@ problem description."
     (let [p (first ps)]
     (if (> (* prod p) 100000) (* prod p)
         (recur (* prod p) (rest ps))))))
+
+;; ================
+
+;; Euler's Totient function, φ(n) [sometimes called the phi function], is
+;; used to determine the number of positive numbers less than or equal to n
+;; which are relatively prime to n. For example, as 1, 2, 4, 5, 7, and 8,
+;; are all less than nine and relatively prime to nine, φ(9)=6.
+
+;; The number 1 is considered to be relatively prime to every positive
+;; number, so φ(1)=1.
+
+;; Interestingly, φ(87109)=79180, and it can be seen that 87109 is a
+;; permutation of 79180.
+
+;; Find the value of n, 1 < n < 10^7, for which φ(n) is a permutation of n
+;; and the ratio n/φ(n) produces a minimum.
+
+;; Notes: φ(n) must have same number of digits.
+;; Minimal value if n is prime, but that won't work. What if n is the
+;; product of two primes?
+;;
+;; (- 1 (/ 1 p)) == (/ (dec p) p)
+;; φ(p) = p-1, if p is prime
+;; φ(pq) = φ(p)φ(q)
+;;       = (p-1)(q-1), if p and q are both prime
+
+(defn p70-ns-and-nphis
+  []
+  (let [sqrt (inc (int (Math/sqrt 10000000)))
+        ps (primes-upto 10000000)
+        under (reverse (take-while #(<= % sqrt) ps))
+        over (drop (count under) ps)]
+    (for [p (take 300 under)
+          q (take 300 over)
+          :let [n (* p q)]
+          :when (< n 10000000)
+          :let [phi (* (dec p) (dec q))]
+          :when (numeric-permutation? n phi)]
+      (list n (/ n phi) p q))))
+
+(defn p70
+  []
+  (apply min-key second (p70-ns-and-nphis)))
