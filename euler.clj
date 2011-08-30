@@ -2444,8 +2444,20 @@ problem description."
 
 (defn p71
   []
-  ;; Increase numerator to max value, then reduce numer by 1.
   (loop [b 1000000]
     (let [a (/ (dec (* 3 b)) 7)]
       (cond (integer? a) a
             true (recur (dec b))))))
+
+;; ================
+
+;; How many elements are in the set of reduced proper fractions for d <=
+;; 1000000?
+;;
+;; See p70 and http://en.wikipedia.org/wiki/Farey_Sequence
+
+(defn p72
+  []
+  (count (set (for [n (range 1 1000000)
+                    d (range 1 1000001)]
+                (/ n d)))))
