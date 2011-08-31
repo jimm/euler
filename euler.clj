@@ -2597,3 +2597,23 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
 ;;
 ;; Given that L is the length of the wire, for how many values of L <=
 ;; 1,500,000 can exactly one integer sided right angle triangle be formed?
+
+;; The naive implementation below takes too long. See
+;; http://en.wikipedia.org/wiki/Pythagorean_triple.
+
+(defn one-right-angle-triangle?
+  [l]
+  ;; stop generating solutions after finding the second triangle
+  (let [first-two (take 2 (for [a (range 1 (/ l 2))
+                                b (range a (dec l))
+                                :let [c (- l a b)]
+                                :when (== (+ (* a a) (* b b)) (* c c))]
+                            1))]
+    (println "l =" l "first-two =" first-two) ; DEBUG
+    (== 1 (count first-two))))
+
+(defn p75
+  []
+  (count (for [l (range 3 1500001)
+               :when (one-right-angle-triangle? l)]
+           l)))
