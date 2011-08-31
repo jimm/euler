@@ -2355,7 +2355,7 @@ problem description."
 ;; When does that happen? When the number is made up of as many primes as
 ;; possible.
 
-;; Simplified: product of primes that is less than 1,000,000.
+;; Simplified: product of primes that are less than 1,000,000.
 (defn p69
   []
   (loop [prod 1
@@ -2451,13 +2451,149 @@ problem description."
 
 ;; ================
 
-;; How many elements are in the set of reduced proper fractions for d <=
-;; 1000000?
+;; See p71. How many elements are in the set of reduced proper fractions for
+;; d <= 1000000?
+
+;; See http://en.wikipedia.org/wiki/Farey_Sequence
 ;;
-;; See p70 and http://en.wikipedia.org/wiki/Farey_Sequence
+;;   length Fn = 1 + sum(for m=1..n, phi(m))
+
+;; Notes:
+;;
+;; We need to subtract 2 from Fn because this problem doesn't count 0/1 or
+;; 1/1.
+;;
+;; Calculating the prime factors takes a lot of time, so we pre-calculate
+;; them using a prime sieve.
+
+(defn fill-mults-of
+  "Given a vector v of n+1 vectors (0..n), return a new vector where each
+index that is a multiple of p contains p."
+  [n p v]
+  (loop [v v
+         mult p]
+    ;; (println "fmo n =" n "mult =" mult) ; DEBUG
+    (if (<= mult n) (recur (assoc v mult (conj (nth v mult) p)) (+ mult p))
+        v)))
+
+(defn prime-factors-upto
+  "Return a vector whose i'th entry is a sequence of the prime factors of i.
+For example, the entry for 36 will be [2, 3]. Entries 0 and 1 will be empty
+vectors."
+  [n]
+  (loop [v (vec (repeat (inc n) []))
+         i 2
+         p 2
+         ps (next primes)]
+    (if (<= p n) (recur (fill-mults-of n p v) (inc i) (first ps) (next ps))
+        v)))
+
+(defn phi
+  "Return the value of Euler's totient function for n.
+
+Because calculating the prime factors of a number takes time and there is a
+lot of work if you are doing this for a range of numbers, you should first
+call prime-factors-upto for the max value of the range then pass that in.
+See prime-factors-upto and p72."
+  ([n] (phi n (prime-factors-upto n)))
+  ([n prime-factor-vec]
+     (let [pf (nth prime-factor-vec n)]
+           (/ (* n (reduce * (map dec pf)))
+              (reduce * pf)))))
 
 (defn p72
   []
-  (count (set (for [n (range 1 1000000)
-                    d (range 1 1000001)]
-                (/ n d)))))
+  (let [prime-factors (prime-factors-upto 1000000)]
+    (dec (reduce + (map #(phi % prime-factors) (range 1 1000001))))))
+
+;; ================
+
+;; See p71. How many fractions lie between 1/3 and 1/2 in the sorted set of
+;; reduced proper fractions for d 12,000?
+
+(defn p73
+  []
+  (loop [a 0, b 1, c 1, d 12000
+         num-fracs 0]
+    (let [frac (/ a b)
+          k (int (/ (+ 12000 b) d))]
+      (cond (<= frac 1/3) (recur c d (- (* k c) a) (- (* k d) b) num-fracs)
+            (>= frac 1/2) num-fracs
+            true          (recur c d (- (* k c) a) (- (* k d) b) (inc num-fracs))))))
+
+;; ================
+
+;; The number 145 is well known for the property that the sum of the factorial
+;; of its digits is equal to 145:
+;;
+;;   1! + 4! + 5! = 1 + 24 + 120 = 145
+;;
+;; Perhaps less well known is 169, in that it produces the longest chain of
+;; numbers that link back to 169; it turns out that there are only three
+;; such loops that exist:
+
+;; 169 -> 363601 -> 1454 -> 169
+;; 871 -> 45361 -> 871
+;; 872 -> 45362 -> 872
+;;
+;; It is not difficult to prove that EVERY starting number will eventually
+;; get stuck in a loop. For example,
+;;
+;; 69 -> 363600 -> 1454 -> 169 -> 363601 (-> 1454)
+;; 78 -> 45360 -> 871 -> 45361 (-> 871)
+;; 540 -> 145 (-> 145)
+;;
+;; Starting with 69 produces a chain of five non-repeating terms, but the
+;; longest non-repeating chain with a starting number below one million is
+;; sixty terms.
+;;
+;; How many chains, with a starting number below one million, contain
+;; exactly sixty non-repeating terms?
+
+(def digit-factorials (vec (map factorial (range 0 10))))
+(def char-digit-factorials
+  (apply hash-map (interleave [\0 \1 \2 \3 \4 \5 \6 \7 \8 \9] digit-factorials)))
+
+(defn sum-of-factorials-of-digits
+  "Returns the sum of the factorials of each of the digits of n."
+  [n]
+  (apply + (map #(get char-digit-factorials %) (str n))))
+
+(defn num-non-repeating-sofod-terms
+  "Returns the number of non-repeating terms in the sequence of integers
+found by repeatedly applying sum-of-factorials-of-digits to n."
+  [n]
+  (loop [n n
+         terms [n]]
+    (let [next-term (sum-of-factorials-of-digits n)]
+      (if (some #{next-term} terms) (count terms)
+          (recur next-term (conj terms next-term))))))
+
+(defn p74
+  []
+  (count (for [n (range 2 1000000)
+               :when (== 60 (num-non-repeating-sofod-terms n))]
+           n)))
+
+;; ================
+
+;; It turns out that 12 cm is the smallest length of wire that can be bent
+;; to form an integer sided right angle triangle in exactly one way, but
+;; there are many more examples.
+;;
+;; 12 cm: (3,4,5)
+;; 24 cm: (6,8,10)
+;; 30 cm: (5,12,13)
+;; 36 cm: (9,12,15)
+;; 40 cm: (8,15,17)
+;; 48 cm: (12,16,20)
+;;
+;; In contrast, some lengths of wire, like 20 cm, cannot be bent to form an
+;; integer sided right angle triangle, and other lengths allow more than one
+;; solution to be found; for example, using 120 cm it is possible to form
+;; exactly three different integer sided right angle triangles.
+;;
+;; 120 cm: (30,40,50), (20,48,52), (24,45,51)
+;;
+;; Given that L is the length of the wire, for how many values of L <=
+;; 1,500,000 can exactly one integer sided right angle triangle be formed?
