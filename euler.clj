@@ -3,7 +3,7 @@
         [clojure.set :only (difference)]
         [clojure.string :only (split-lines)]
         [clojure.contrib.combinatorics :only (lex-permutations combinations permutations)]
-        [clojure.contrib.math :only (expt abs exact-integer-sqrt)]
+        [clojure.contrib.math :only (expt abs exact-integer-sqrt gcd)]
         [clojure.contrib.greatest-least :only (greatest-by)]))
 
 (defn- prime-test
@@ -116,6 +116,14 @@ b=2..."
         low-divisors (filter #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate inc 1)))]
   (set (concat low-divisors (map #(unchecked-divide n %) low-divisors)))))
 
+(defn max-val-key
+  "Returns from map m the key whose value, a number, is greatest."
+  [m]
+  (loop [max-key 0, max-val 0, m m]
+    (cond (nil? m) max-key
+          (> (val (first m)) max-val) (recur (key (first m)) (val (first m)) (next m))
+          true (recur max-key max-val (next m)))))
+
 (defn max-val-index
   "Return the index of the maximum value found after applying f to coll.
 
@@ -146,6 +154,8 @@ uses empty-val as a default value."
   "Returns true if i and j are numbers whose digits are permutations of each other."
   [i j]
   (= (sort (str i)) (sort (str j))))
+
+(defn coprime? [m n] (== 1 (gcd m n)))
 
 ;; ================ problems ================
 
@@ -1095,12 +1105,7 @@ including that number."
                      :when (== (* c c) (+ (* a a) (* b b)))]
                  p)
         freqs (frequencies perims)]
-    ; Find key that has max val. There has to be a built-in function that
-    ; does this.
-    (loop [max-key 0, max-val 0, freqs freqs]
-      (cond (nil? freqs) max-key
-            (> (val (first freqs)) max-val) (recur (key (first freqs)) (val (first freqs)) (next freqs))
-            true (recur max-key max-val (next freqs))))))
+    (max-val-key freqs)))
 
 ;; ================
 
@@ -2598,22 +2603,21 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
 ;; Given that L is the length of the wire, for how many values of L <=
 ;; 1,500,000 can exactly one integer sided right angle triangle be formed?
 
-;; The naive implementation below takes too long. See
-;; http://en.wikipedia.org/wiki/Pythagorean_triple.
+;; The naive implementation (find all legit perims for each L) takes too
+;; long. See http://en.wikipedia.org/wiki/Pythagorean_triple.
 
-(defn one-right-angle-triangle?
+(defn p75-euclid-perims
   [l]
-  ;; stop generating solutions after finding the second triangle
-  (let [first-two (take 2 (for [a (range 1 (/ l 2))
-                                b (range a (dec l))
-                                :let [c (- l a b)]
-                                :when (== (+ (* a a) (* b b)) (* c c))]
-                            1))]
-    (println "l =" l "first-two =" first-two) ; DEBUG
-    (== 1 (count first-two))))
+  (let [sq (int (Math/sqrt l))]
+    (for [m (range 1 sq 2)
+          n (range 2 sq 2)
+          :when (coprime? m n)
+          :let [perim (+ (abs (- (* m m) (* n n)))
+                         (* 2 m n)
+                         (+ (* m m) (* n n)))]
+          k (range 1 (/ (inc l) perim))]
+      (* k perim))))
 
 (defn p75
   []
-  (count (for [l (range 3 1500001)
-               :when (one-right-angle-triangle? l)]
-           l)))
+  (count (filter #(== 1 (val %)) (frequencies (p75-euclid-perims 1500000)))))
