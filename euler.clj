@@ -2621,3 +2621,75 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
 (defn p75
   []
   (count (filter #(== 1 (val %)) (frequencies (p75-euclid-perims 1500000)))))
+
+;; ================
+
+;; It is possible to write five as a sum in exactly six different ways:
+;;
+;; 4 + 1
+;; 3 + 2
+;; 3 + 1 + 1
+;; 2 + 2 + 1
+;; 2 + 1 + 1 + 1
+;; 1 + 1 + 1 + 1 + 1
+;;
+;; How many different ways can one hundred be written as a sum of at least
+;; two positive integers?
+
+;; http://en.wikipedia.org/wiki/Partition_(number_theory)
+
+;; Slow, but works
+(defn partial-partition
+  [k n]
+  (cond (> k n) 0
+        (== k n) 1
+        true (+ (partial-partition (inc k) n) (partial-partition k (- n k)))))
+
+(def partial-partition (memoize partial-partition))
+
+(defn p76
+  []
+  ;; We subtract 1 because we don't want to count the case where the
+  ;; partition is 100 itself.
+  (dec (partial-partition 1 100)))
+
+;; ================
+
+;; It is possible to write ten as the sum of primes in exactly five
+;; different ways:
+;;
+;; 7 + 3
+;; 5 + 5
+;; 5 + 3 + 2
+;; 3 + 3 + 2 + 2
+;; 2 + 2 + 2 + 2 + 2
+;;
+;; What is the first value which can be written as the sum of primes in over
+;; five thousand different ways?
+
+;; ================
+
+;; Let p(n) represent the number of different ways in which n coins can be
+;; separated into piles. For example, five coins can separated into piles in
+;; exactly seven different ways, so p(5)=7.
+;;
+;; OOOOO
+;; OOOO   O
+;; OOO   OO
+;; OOO   O   O
+;; OO   OO   O
+;; OO   O   O   O
+;; O   O   O   O   O
+;;
+;; Find the least value of n for which p(n) is divisible by one million.
+
+;; This is the same as the p76 partitioning problem, except we can now
+;; include the case where the partition equals the number (a single pile of
+;; coins).
+
+;; This naive implementation is too slow.
+(defn p78
+  []
+  (first (for [n (iterate inc 1)
+               :when (zero? (mod (partial-partition 1 n) 1000000))]
+           n)))
