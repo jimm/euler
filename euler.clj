@@ -12,17 +12,17 @@
   (let [n (int n) i (int i) j (int j) h (int h)]
     (cond (== i j) (== i h)
           (zero? (unchecked-remainder n i)) (recur n i i h)
-          true (recur n (inc 1) j h))))
+          :else (recur n (inc 1) j h))))
 
 (defn prime?
   "Returns true if n is prime. See also lookup-prime? and divs-prime?."
   [n]
   (cond (== n 2) true
         (even? n) false
-        true (let [n (int n)
+        :else (let [n (int n)
                    i (Math/floor (Math/sqrt n))]
                (cond (== n (* i i)) false
-                     true (prime-test n 2 i i)))))
+                     :else (prime-test n 2 i i)))))
 
 (def m-prime? (memoize prime?))
 
@@ -31,7 +31,7 @@
   [n]
   (cond (== n 2) true
         (even? n) false
-        true (== n (first (drop-while #(< % n) primes)))))
+        :else (== n (first (drop-while #(< % n) primes)))))
 
 (def m-lookup-prime? (memoize lookup-prime?))
 
@@ -42,8 +42,8 @@ other than 1 in the numbers up to (sqrt n)."
   (cond (< n 2) false
         (== n 2) true
         (even? n) false
-        true (let [max-divisor-check (/ (- (int (Math/sqrt n)) 2) 2)] ; subtract 2 because we start iterating at 3
-               (not-any? #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate #(+ % 2) 3))))))
+        :else (let [max-divisor-check (/ (- (int (Math/sqrt n)) 2) 2)] ; subtract 2 because we start iterating at 3
+                (not-any? #(zero? (unchecked-remainder n %)) (take max-divisor-check (iterate #(+ % 2) 3))))))
 
 (def m-divs-prime? (memoize divs-prime?))
 
@@ -122,7 +122,7 @@ b=2..."
   (loop [max-key 0, max-val 0, m m]
     (cond (nil? m) max-key
           (> (val (first m)) max-val) (recur (key (first m)) (val (first m)) (next m))
-          true (recur max-key max-val (next m)))))
+          :else (recur max-key max-val (next m)))))
 
 (defn max-val-index
   "Return the index of the maximum value found after applying f to coll.
@@ -182,7 +182,7 @@ uses empty-val as a default value."
 (defn fib-upto [n]
   (cond (zero? n) 0
         (== n 1) 1
-        true (fib-upto-acc n [0 1])))
+        :else (fib-upto-acc n [0 1])))
 
 (defn p2
   "Find the sum of all the even-valued terms in the Fibonacci sequence which
@@ -335,7 +335,7 @@ using the combinitorial function, combining 40 things 20 at a time."
                        (when (pos? ones) "-")
                        (*digit-words* ones))
            (== tens 1) (*teens-words* ones)
-           true       (*digit-words* ones)))))
+           :else       (*digit-words* ones)))))
 
 (defn only-letters
   [s]
@@ -408,7 +408,7 @@ using the combinitorial function, combining 40 things 20 at a time."
    prev-row-paths
 
    ; Middle rows: calculate new list of prev-row-paths
-   true
+   :else
    (let [row (nth triangle row-idx)
          prev-row (nth triangle (dec row-idx))
          prev-row-length (count prev-row)]
@@ -427,7 +427,7 @@ using the combinitorial function, combining 40 things 20 at a time."
                      (> (:value left-parent-row-path) (:value right-parent-row-path))
                      (add-to-path left-parent-row-path entry)
 
-                     true
+                     :else
                      (add-to-path right-parent-row-path entry)))
                  (range 0 (count row)))))))
 
@@ -575,7 +575,7 @@ in IS, which must be a sorted sequence of integers." [n is]
      (empty? is)       (recur (inc i) is (conj acc i))
      (== i (first is)) (recur (inc i) (rest is) acc)
      (< i (first is))  (recur (inc i) is (conj acc i))
-     true              (recur (inc i) (rest is) (conj acc i)))))
+     :else             (recur (inc i) (rest is) (conj acc i)))))
 
 (defn p23
   "Find the sum of all the positive integers which cannot be written as the
@@ -636,7 +636,7 @@ for a previously seen divisor/remainder pair that indicates a cycle."
        (.contains digits-and-remainders pair)
        (map first (drop (.indexOf digits-and-remainders pair) digits-and-remainders))
 
-       true
+       :else
        (recur (* remainder 10) (conj digits-and-remainders pair))))))
 
 (defn p26
@@ -931,7 +931,7 @@ comprehension."
           (and (pos? (digit-to-int (last dd)))
                (= (/ numer denom) (/ (digit-to-int (first dn)) (digit-to-int (last dd)))))
 
-          true
+          :else
           false)))
 
 (defn p33
@@ -1404,7 +1404,7 @@ return n so that the caller can use it as the return value of a call to
          checking-nth 3]
     (cond (not= 4 (count (prime-factors-of (+ group-start checking-nth)))) (recur (+ group-start (inc checking-nth)) 3)
           (zero? checking-nth) group-start
-          true (recur group-start (dec checking-nth)))))
+          :else (recur group-start (dec checking-nth)))))
 
 ;; ================
 
@@ -1736,7 +1736,7 @@ satisfies this problem's criteria."
          n (reverse-and-add n)]
     (cond (zero? i) true
           (palindrome? n) false
-          true (recur (dec i) (reverse-and-add n)))))
+          :else (recur (dec i) (reverse-and-add n)))))
 
 (defn p55
   []
@@ -1838,12 +1838,12 @@ satisfies this problem's criteria."
                               (if (divs-prime? (first nw-diagonal)) 1 0)
                               (if (divs-prime? (first sw-diagonal)) 1 0))]
         (cond (< (* 10 new-num-primes) new-num-diagonals) (+ 2 side-length)
-              true (recur (+ 2 side-length)
-                          new-num-diagonals
-                          new-num-primes
-                          (rest ne-diagonal)
-                          (rest nw-diagonal)
-                          (rest sw-diagonal))))))
+              :else (recur (+ 2 side-length)
+                           new-num-diagonals
+                           new-num-primes
+                           (rest ne-diagonal)
+                           (rest nw-diagonal)
+                           (rest sw-diagonal))))))
 
 ;; ================
 
@@ -1923,7 +1923,7 @@ satisfies this problem's criteria."
   (loop [pairs (combinations plist 2)]
     (cond (nil? pairs) plist            ; all pairs are OK, return primes
           (p60-pair-remarkable? (first pairs)) (recur (next pairs)) ; this pair OK, check next pair
-          true false)))       ; this pair is not remarkable, return false
+          :else false)))         ; this pair is not remarkable, return false
 
 ;; This naive implementation is too slow. It's correct, because it finds the
 ;; group of four remarkable primes described above when I change
@@ -2208,7 +2208,7 @@ continued fraction representation of the square root of n."
           (let [[term new-frac] (p64-next-step frac)]
             (cond (zero? term) [int-portion []] ; exact sqare root
                   (some #{new-frac} seen-fracs) [int-portion nums] ; found repeat
-                  true (recur new-frac (conj seen-fracs new-frac) (conj nums term))))))))
+                  :else (recur new-frac (conj seen-fracs new-frac) (conj nums term))))))))
 
 (defn p64
   "Return the number of square roots of 1 <= N <= 10000 whose repeating
@@ -2452,7 +2452,7 @@ problem description."
   (loop [b 1000000]
     (let [a (/ (dec (* 3 b)) 7)]
       (cond (integer? a) a
-            true (recur (dec b))))))
+            :else (recur (dec b))))))
 
 ;; ================
 
@@ -2524,7 +2524,7 @@ See prime-factors-upto and p72."
           k (int (/ (+ 12000 b) d))]
       (cond (<= frac 1/3) (recur c d (- (* k c) a) (- (* k d) b) num-fracs)
             (>= frac 1/2) num-fracs
-            true          (recur c d (- (* k c) a) (- (* k d) b) (inc num-fracs))))))
+            :else         (recur c d (- (* k c) a) (- (* k d) b) (inc num-fracs))))))
 
 ;; ================
 
@@ -2643,7 +2643,7 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
   [k n]
   (cond (> k n) 0
         (== k n) 1
-        true (+ (partial-partition (inc k) n) (partial-partition k (- n k)))))
+        :else (+ (partial-partition (inc k) n) (partial-partition k (- n k)))))
 
 (def partial-partition (memoize partial-partition))
 
@@ -2666,6 +2666,21 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
 ;;
 ;; What is the first value which can be written as the sum of primes in over
 ;; five thousand different ways?
+
+;; Notes
+
+;; http://oeis.org/A000607
+;;
+;; Like p76, we subtract 1 because we don't want to count the case where the
+;; partition is the number itself.
+
+;; From OEIS, MAPLE code:
+;;
+;; t1:=mul(1/(1-q^ithprime(n)), n=1..51);
+;; t2:=series(t1, q, 50);
+;; t3:=seriestolist(t2);
+
+
 
 ;; ================
 
