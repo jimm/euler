@@ -2638,20 +2638,21 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
 
 ;; http://en.wikipedia.org/wiki/Partition_(number_theory)
 
-;; Slow, but works
 (defn partial-partition
   [k n]
   (cond (> k n) 0
         (== k n) 1
-        :else (+ (partial-partition (inc k) n) (partial-partition k (- n k)))))
+        :else (+ (partial-partition (inc k) n)
+                 (partial-partition k (- n k)))))
 
+;; Memoization helps a lot here.
 (def partial-partition (memoize partial-partition))
 
 (defn p76
   []
   ;; We subtract 1 because we don't want to count the case where the
   ;; partition is 100 itself.
-  (dec (partial-partition 1 100)))
+ (dec (partial-partition 1 100)))
 
 ;; ================
 
@@ -2680,7 +2681,18 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
 ;; t2:=series(t1, q, 50);
 ;; t3:=seriestolist(t2);
 
+(def m-primes-upto (memoize primes-upto))
 
+(defn num-ways-sum-of-primes
+  [n]
+  (cond (< n 2) 0
+        (== n 2) 1
+        (== n 3) 1
+        (== n 5) 2
+        :else (reduce + (for [p (reverse (m-primes-upto n))]
+                          (num-ways-sum-of-primes (- n p))))))
+
+(def num-ways-sum-of-primes (memoize num-ways-sum-of-primes))
 
 ;; ================
 
@@ -2703,8 +2715,15 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
 ;; coins).
 
 ;; This naive implementation is too slow.
+;; (defn p78
+;;   []
+;;   (first (for [n (iterate inc 1)
+;;                :when (zero? (mod (partial-partition 1 n) 1000000))]
+;;            n)))
+
 (defn p78
   []
-  (first (for [n (iterate inc 1)
-               :when (zero? (mod (partial-partition 1 n) 1000000))]
-           n)))
+  (loop [n 1]
+    (when (zero? (mod n 1000)) (println n)) ; DEBUG
+    (if (zero? (mod (partial-partition 1 n) 1000000)) n
+        (recur (inc n)))))
