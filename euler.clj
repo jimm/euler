@@ -1613,7 +1613,7 @@ satisfies this problem's criteria."
     (doseq [rm regex-mask-pairs
             s sps
             :when (.matches s (first rm))]
-      (dosync (ref-set pm-map (assoc-conj @pm-map rm s ()))))
+      (dosync (alter pm-map assoc-conj rm s ())))
     ; Now for each (regex, mask) pair further split up the matching values
     ; into those that match the same mask (for example, 1224 and 1334 both
     ; match the mask ".XX.").
@@ -1622,7 +1622,7 @@ satisfies this problem's criteria."
               s (get @pm-map key)
               :let [mask (second key)
                     mask-key (p51-masked mask s)]]
-        (dosync (ref-set mask-map (assoc-conj @mask-map mask-key s ()))))
+        (dosync (alter mask-map assoc-conj mask-key s ())))
       (map #(Integer/parseInt %) (apply greatest-by #(count %) (vals @mask-map))))))
 
 (defn p51
@@ -2681,6 +2681,13 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
 ;; t2:=series(t1, q, 50);
 ;; t3:=seriestolist(t2);
 
+;; wrong
+(defn a000607-maple
+  [n]
+  (reduce * (for [q (range 2 (inc n))
+                  :let [_ (println q)]]
+              (/ 1 (- 1 (expt q (nth primes n)))))))
+
 (def m-primes-upto (memoize primes-upto))
 
 (defn num-ways-sum-of-primes
@@ -2693,6 +2700,10 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
                           (num-ways-sum-of-primes (- n p))))))
 
 (def num-ways-sum-of-primes (memoize num-ways-sum-of-primes))
+
+(defn p77
+  []
+  "not yet implemented")
 
 ;; ================
 
@@ -2709,6 +2720,8 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
 ;; O   O   O   O   O
 ;;
 ;; Find the least value of n for which p(n) is divisible by one million.
+
+;; Notes
 
 ;; This is the same as the p76 partitioning problem, except we can now
 ;; include the case where the partition equals the number (a single pile of
