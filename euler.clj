@@ -2682,28 +2682,27 @@ found by repeatedly applying sum-of-factorials-of-digits to n."
 ;; t3:=seriestolist(t2);
 
 ;; wrong
-(defn a000607-maple
-  [n]
-  (reduce * (for [q (range 2 (inc n))
-                  :let [_ (println q)]]
-              (/ 1 (- 1 (expt q (nth primes n)))))))
+;; (defn a000607-maple
+;;   [n]
+;;   (reduce * (for [q (range 2 (inc n))
+;;                   :let [_ (println q)]]
+;;               (/ 1 (- 1 (expt q (nth primes n)))))))
 
-(def m-primes-upto (memoize primes-upto))
-
-(defn num-ways-sum-of-primes
+(defn num-sum-primes-combinations
   [n]
   (cond (< n 2) 0
-        (== n 2) 1
-        (== n 3) 1
+        (<= n 4) 1
         (== n 5) 2
-        :else (reduce + (for [p (reverse (m-primes-upto n))]
-                          (num-ways-sum-of-primes (- n p))))))
+        :else (reduce + (for [p (reverse (primes-upto n))]
+                          (num-sum-primes-combinations (- n p))))))
 
-(def num-ways-sum-of-primes (memoize num-ways-sum-of-primes))
+(def num-sum-primes-combinations (memoize num-sum-primes-combinations))
 
 (defn p77
   []
-  "not yet implemented")
+  (first (for [n (iterate inc 11)
+               :when (> (num-sum-primes-combinations n) 5000)]
+           n)))
 
 ;; ================
 
