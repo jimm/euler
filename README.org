@@ -5,10 +5,6 @@ off using [[http://www.erlang.org/][Erlang]], but have switched to [[http://cloj
 
 [[http://projecteuler.net/profile/jmenard.png]]
 
-I'm not sure if that image, which seems to get cached by Github, is kept up
-to date. If not, and if you care, you can visit http://www.jimmenard.com/ to
-see my most current score.
-
 The solutions are in functions named "pN".
 
 p54 (poker hands) is in a separate file.
