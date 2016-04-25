@@ -49,12 +49,12 @@
 
 (defstruct card :value :suit)
 
-(def *card-vals* (vec "..23456789TJQKA"))
+(def card-vals (vec "..23456789TJQKA"))
 
 (defn make-card
   "Given a single card string like \"8H\", returns a card structure."
   [s]
-  (struct card (.indexOf *card-vals* (first s)) (second s)))
+  (struct card (.indexOf card-vals (first s)) (second s)))
 
 (defn make-hand
   "Pass this function a string like \"8H 2S AC JS JD\" and it returns a
@@ -65,7 +65,7 @@ sequence of card structures. Used only during testing/development. "
 (defn hand-str
   "Used only during testing/development."
   [hand]
-  (trim (apply str (interleave (sort (map #(str (nth *card-vals* (:value %)) (:suit %)) hand)) (repeat " ")))))
+  (trim (apply str (interleave (sort (map #(str (nth card-vals (:value %)) (:suit %)) hand)) (repeat " ")))))
 
 ;; Hand-rank stores information about a hand's value: its rank number from 0
 ;; (simple highest value card) through 9 (royal flush), its hand-val (the
@@ -184,7 +184,6 @@ sequence of card structures. Used only during testing/development. "
   "Breaks ties in the case of equal hand rank values. Looks first at hand
   value then if those are equal looks at highest card."
   [rank1 rank2]
-  (debug "player-1-wins-tie-breaker?")
   (if (and (:hand-val rank1) (:hand-val rank2))
     (if (= (:hand-val rank1) (:hand-val rank2))
       (> (:highest-card rank1) (:highest-card rank2))
@@ -193,14 +192,11 @@ sequence of card structures. Used only during testing/development. "
 
 (defn player-1-wins?
   [hand1 hand2]
-  (debug "player-1-wins?")
   (let [rank1 (rank-poker-hand hand1)
         rank2 (rank-poker-hand hand2)]
-    (debug "hand1 =" (hand-str hand1) "rank1 =" rank1) ; DEBUG
-    (debug "hand2 =" (hand-str hand2) "rank2 =" rank2) ; DEBUG
     (cond (> (:hand-rank rank1) (:hand-rank rank2)) true
           (< (:hand-rank rank1) (:hand-rank rank2)) false
-          true (player-1-wins-tie-breaker? rank1 rank2))))
+          true (player-1-wins-breaker-tie? rank1 rank2))))
 
 (defn p54
   []
